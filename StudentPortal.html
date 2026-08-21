@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bombi High School - Student Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .snap-container {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100vh;
+        }
+
+        .snap-section {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+
+        .reveal-card {
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal-card.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-card {
+                background-color: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                color: #0f172a !important;
+            }
+
+            .print-text-dark {
+                color: #0f172a !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-slate-100 font-sans snap-container antialiased">
+
+    <!-- Top Sticky Navigation Bar -->
+    <nav
+        class="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex justify-between items-center no-print">
+        <div class="flex items-center gap-3">
+            <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white">B</div>
+            <h1 class="text-xl font-bold tracking-tight text-white">Bombi High School <span
+                    class="text-xs text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full ml-2">Student
+                    Portal</span></h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="openEditProfileBtn"
+                class="hidden bg-slate-800 text-indigo-400 border border-indigo-500/30 text-xs px-3 py-1.5 rounded-md hover:bg-slate-700 transition">Edit
+                Profile Name</button>
+            <button id="printReportBtn"
+                class="hidden bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-md transition font-semibold shadow-md shadow-indigo-600/20">Print
+                Transcript</button>
+            <button id="logoutBtn"
+                class="hidden bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs px-3 py-1.5 rounded-md hover:bg-rose-500 hover:text-white transition">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Login Modal Overlay -->
+    <div id="studentLoginModal"
+        class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl max-w-md w-full shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-bold text-white">Student Access</h2>
+                <p class="text-sm text-slate-400">Log in with your assigned Student ID and Surname password.</p>
+            </div>
+            <form id="studentLoginForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Student ID</label>
+                    <input type="text" id="loginStudentId" required placeholder="e.g. BHS-2026-001"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Surname (Password)</label>
+                    <input type="password" id="loginSurname" required placeholder="Enter surname..."
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 transition">
+                </div>
+                <p id="loginError" class="text-xs text-rose-400 hidden">Invalid Student ID or Surname.</p>
+                <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg transition shadow-lg shadow-indigo-600/30">Access
+                    Portal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Profile Name Modal -->
+    <div id="editProfileModal"
+        class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-white">Update Profile Name</h3>
+            <form id="editProfileForm" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Surname (Locked/Password)</label>
+                    <input type="text" id="editSurname" disabled
+                        class="w-full bg-slate-900/60 border border-slate-700/60 rounded-md p-2 text-sm text-slate-400 focus:outline-none cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">First & Middle Names</label>
+                    <input type="text" id="editOtherNames" required
+                        class="w-full bg-slate-900 border border-slate-700 rounded-md p-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" id="closeEditProfileModal"
+                        class="px-4 py-2 text-xs bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-xs bg-indigo-600 text-white rounded-md hover:bg-indigo-500">Save
+                        Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Student Dashboard Container -->
+    <main id="studentApp" class="hidden">
+
+        <!-- SECTION 1: Student Overview & Ranking Metrics -->
+        <section class="snap-section min-h-screen pt-24 pb-12 px-6 max-w-7xl mx-auto flex flex-col justify-center">
+            <div class="space-y-6">
+
+                <!-- Profile Banner -->
+                <div
+                    class="reveal-card print-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="space-y-1">
+                        <span
+                            class="text-xs font-mono font-bold text-indigo-400 bg-indigo-950/60 border border-indigo-800/60 px-2.5 py-1 rounded-full"
+                            id="profileId"></span>
+                        <h2 class="text-2xl font-bold text-white pt-2 print-text-dark" id="profileName"></h2>
+                        <p class="text-xs text-slate-400 print-text-dark">Official Student Academic Profile & Terminal
+                            Performance</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full md:w-auto">
+                        <div class="bg-slate-900/80 border border-slate-700/60 p-3 rounded-xl text-center print-card">
+                            <span
+                                class="text-[10px] text-slate-400 uppercase font-semibold block print-text-dark">Department</span>
+                            <span class="text-xs font-bold text-indigo-300 print-text-dark" id="profileDept"></span>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-700/60 p-3 rounded-xl text-center print-card">
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold block print-text-dark">Class
+                                Level</span>
+                            <span class="text-xs font-bold text-indigo-300 print-text-dark" id="profileClass"></span>
+                        </div>
+                        <div
+                            class="bg-slate-900/80 border border-slate-700/60 p-3 rounded-xl text-center col-span-2 sm:col-span-1 print-card">
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold block print-text-dark">Class
+                                Arm</span>
+                            <span class="text-xs font-bold text-indigo-300 print-text-dark" id="profileArm"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Rank Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div
+                        class="reveal-card print-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-2 text-center">
+                        <span
+                            class="text-xs text-slate-400 font-semibold uppercase tracking-wider print-text-dark">Overall
+                            Average Score</span>
+                        <p class="text-4xl font-extrabold text-indigo-400 print-text-dark" id="overallAvg">0%</p>
+                        <p class="text-[10px] text-slate-500 print-text-dark">Computed across all active subject
+                            assessments</p>
+                    </div>
+
+                    <div
+                        class="reveal-card print-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-2 text-center">
+                        <span
+                            class="text-xs text-slate-400 font-semibold uppercase tracking-wider print-text-dark">Class
+                            Rank</span>
+                        <p class="text-4xl font-extrabold text-amber-400 print-text-dark" id="classRank">--</p>
+                        <p class="text-[10px] text-slate-500 print-text-dark" id="classRankTotal">Ranked within class
+                            arm</p>
+                    </div>
+
+                    <div
+                        class="reveal-card print-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-2 text-center">
+                        <span
+                            class="text-xs text-slate-400 font-semibold uppercase tracking-wider print-text-dark">Department
+                            Rank</span>
+                        <p class="text-4xl font-extrabold text-emerald-400 print-text-dark" id="deptRank">--</p>
+                        <p class="text-[10px] text-slate-500 print-text-dark" id="deptRankTotal">Ranked within
+                            department</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 2: Subject Breakdown & Elective Enrollment -->
+        <section class="snap-section min-h-screen pt-24 pb-12 px-6 max-w-7xl mx-auto flex flex-col justify-center">
+            <div
+                class="reveal-card print-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-6">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700/50 pb-3">
+                    <div>
+                        <h2 class="text-xl font-bold text-indigo-400 print-text-dark">Subject Performance & Course
+                            Enrollment</h2>
+                        <p class="text-xs text-slate-400 print-text-dark">Enroll in available electives or drop optional
+                            subjects below</p>
+                    </div>
+
+                    <!-- Course Enrollment Controls -->
+                    <div class="flex items-center gap-2 no-print">
+                        <select id="studentAvailableSubjectsSelect"
+                            class="bg-slate-900 border border-slate-700 text-xs rounded-md p-2 text-slate-100 focus:border-indigo-500 focus:outline-none">
+                            <option value="">-- Select Elective Subject --</option>
+                        </select>
+                        <button id="studentEnrollBtn"
+                            class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-md transition font-semibold">Enroll
+                            Subject</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead
+                            class="bg-slate-900/80 text-slate-400 border-b border-slate-700 print-card print-text-dark">
+                            <tr>
+                                <th class="p-3">Subject Name</th>
+                                <th class="p-3 text-center">Score / 100</th>
+                                <th class="p-3 text-center">Letter Grade</th>
+                                <th class="p-3 text-center">Remarks</th>
+                                <th class="p-3 text-right no-print">Manage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentScoreTableBody" class="divide-y divide-slate-800/60 print-text-dark"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        let currentStudent = null;
+
+        function calculateGrade(score) {
+            if (score >= 70) return { grade: 'A', remark: 'Excellent' };
+            if (score >= 60) return { grade: 'B', remark: 'Very Good' };
+            if (score >= 50) return { grade: 'C', remark: 'Good' };
+            if (score >= 45) return { grade: 'D', remark: 'Pass' };
+            if (score >= 40) return { grade: 'E', remark: 'Fair' };
+            return { grade: 'F', remark: 'Fail' };
+        }
+
+        function calculateStudentAverage(student) {
+                // Only include numerical scores, filter out null/undefined values
+                const validScores = Object.values(student.scores || {}).filter(s => s !== null && s !== undefined && s !== "");
+                if (!validScores.length) return "N/A";
+
+                const total = validScores.reduce((sum, score) => sum + Number(score), 0);
+                return parseFloat((total / validScores.length).toFixed(1));
+            }
+
+        function saveStudentDataToStorage() {
+            const allStudents = JSON.parse(localStorage.getItem('students')) || [];
+            const index = allStudents.findIndex(s => s.id === currentStudent.id);
+            if (index !== -1) {
+                allStudents[index] = currentStudent;
+                localStorage.setItem('students', JSON.stringify(allStudents));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginModal = document.getElementById('studentLoginModal');
+            const studentApp = document.getElementById('studentApp');
+            const loginForm = document.getElementById('studentLoginForm');
+            const loginError = document.getElementById('loginError');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const printBtn = document.getElementById('printReportBtn');
+            const openEditBtn = document.getElementById('openEditProfileBtn');
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const inputId = document.getElementById('loginStudentId').value.trim();
+                const inputSurname = document.getElementById('loginSurname').value.trim();
+
+                const allStudents = JSON.parse(localStorage.getItem('students')) || [];
+
+                const matchedStudent = allStudents.find(s =>
+                    s.id.toLowerCase() === inputId.toLowerCase() &&
+                    s.surname.toLowerCase() === inputSurname.toLowerCase()
+                );
+
+                if (matchedStudent) {
+                    currentStudent = matchedStudent;
+                    loginModal.classList.add('hidden');
+                    studentApp.classList.remove('hidden');
+                    logoutBtn.classList.remove('hidden');
+                    printBtn.classList.remove('hidden');
+                    openEditBtn.classList.remove('hidden');
+
+                    initStudentDashboard();
+                } else {
+                    loginError.classList.remove('hidden');
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                window.location.reload();
+            });
+
+            printBtn.addEventListener('click', () => {
+                window.print();
+            });
+
+            // Edit Name Modal Controls
+            const editModal = document.getElementById('editProfileModal');
+            openEditBtn.addEventListener('click', () => {
+                document.getElementById('editSurname').value = currentStudent.surname;
+
+                // Extract existing first/other names
+                const nameParts = currentStudent.fullName.split(' ');
+                nameParts.shift(); // remove surname
+                document.getElementById('editOtherNames').value = nameParts.join(' ');
+
+                editModal.classList.remove('hidden');
+            });
+
+            document.getElementById('closeEditProfileModal').addEventListener('click', () => {
+                editModal.classList.add('hidden');
+            });
+
+            document.getElementById('editProfileForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newOtherNames = document.getElementById('editOtherNames').value.trim();
+                if (newOtherNames) {
+                    currentStudent.fullName = `${currentStudent.surname} ${newOtherNames}`;
+                    saveStudentDataToStorage();
+                    renderProfileDetails();
+                    editModal.classList.add('hidden');
+                    alert('Profile name updated successfully!');
+                }
+            });
+
+            // Enroll Subject Button Handler
+            document.getElementById('studentEnrollBtn').addEventListener('click', () => {
+                const select = document.getElementById('studentAvailableSubjectsSelect');
+                const chosenSubject = select.value;
+
+                if (chosenSubject && !currentStudent.subjects.includes(chosenSubject)) {
+                    currentStudent.subjects.push(chosenSubject);
+                    currentStudent.scores[chosenSubject] = null; // Set to null until recorded by admin
+                    saveStudentDataToStorage();
+
+                    renderScoreTable();
+                    renderRankingMetrics();
+                    populateAvailableElectives();
+                }
+            });
+        });
+
+        function initStudentDashboard() {
+            initScrollAnimations();
+            renderProfileDetails();
+            renderRankingMetrics();
+            renderScoreTable();
+            populateAvailableElectives();
+        }
+
+        function initScrollAnimations() {
+            const cards = document.querySelectorAll('.reveal-card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            cards.forEach(card => observer.observe(card));
+        }
+
+        function renderProfileDetails() {
+            document.getElementById('profileId').textContent = currentStudent.id;
+            document.getElementById('profileName').textContent = currentStudent.fullName;
+            document.getElementById('profileDept').textContent = currentStudent.department;
+            document.getElementById('profileClass').textContent = currentStudent.classLevel;
+            document.getElementById('profileArm').textContent = currentStudent.classArm;
+        }
+
+        function renderRankingMetrics() {
+            const allStudents = JSON.parse(localStorage.getItem('students')) || [];
+
+            const processedStudents = allStudents.map(s => ({
+                id: s.id,
+                department: s.department,
+                classLevel: s.classLevel,
+                classArm: s.classArm,
+                average: calculateStudentAverage(s)
+            }));
+
+            const currentAvg = calculateStudentAverage(currentStudent);
+            document.getElementById('overallAvg').textContent = `${currentAvg}%`;
+
+            // Class Arm Ranking
+            const classPeerGroup = processedStudents
+                .filter(s => s.classLevel === currentStudent.classLevel && s.classArm === currentStudent.classArm)
+                .sort((a, b) => b.average - a.average);
+
+            const classRank = classPeerGroup.findIndex(s => s.id === currentStudent.id) + 1;
+            document.getElementById('classRank').textContent = classRank > 0 ? `#${classRank}` : '--';
+            document.getElementById('classRankTotal').textContent = `Out of ${classPeerGroup.length} students in ${currentStudent.classLevel} ${currentStudent.classArm}`;
+
+            // Department Ranking
+            const deptPeerGroup = processedStudents
+                .filter(s => s.department === currentStudent.department)
+                .sort((a, b) => b.average - a.average);
+
+            const deptRank = deptPeerGroup.findIndex(s => s.id === currentStudent.id) + 1;
+            document.getElementById('deptRank').textContent = deptRank > 0 ? `#${deptRank}` : '--';
+            document.getElementById('deptRankTotal').textContent = `Out of ${deptPeerGroup.length} students in ${currentStudent.department}`;
+        }
+
+        function populateAvailableElectives() {
+            const subjectsData = JSON.parse(localStorage.getItem('subjects')) || { electives: {} };
+            const select = document.getElementById('studentAvailableSubjectsSelect');
+            select.innerHTML = '<option value="">-- Select Elective Subject --</option>';
+
+            const allElectives = Object.values(subjectsData.electives || {}).flat();
+            const unassigned = allElectives.filter(sub => !currentStudent.subjects.includes(sub));
+
+            unassigned.forEach(sub => {
+                select.innerHTML += `<option value="${sub}">${sub}</option>`;
+            });
+        }
+
+        function renderScoreTable() {
+                const subjectsData = JSON.parse(localStorage.getItem('subjects')) || { core: [], ss1Core: [] };
+                const tbody = document.getElementById('studentScoreTableBody');
+                tbody.innerHTML = '';
+
+                const subjects = currentStudent.subjects || [];
+
+                const isProtectedCore = (subject) => {
+                    if (subjectsData.core && subjectsData.core.includes(subject)) return true;
+                    if (currentStudent.classLevel === "SS1" && subjectsData.ss1Core && subjectsData.ss1Core.includes(subject)) return true;
+                    return false;
+                };
+
+                subjects.forEach(subject => {
+                    const rawScore = currentStudent.scores[subject];
+                    const hasScore = rawScore !== undefined && rawScore !== null && rawScore !== "";
+                    const displayScore = hasScore ? rawScore : "Null";
+
+                    const evaluation = hasScore
+                        ? calculateGrade(Number(rawScore))
+                        : { grade: 'Null', remark: 'No Score' };
+
+                    const locked = isProtectedCore(subject);
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/30 transition";
+                    tr.innerHTML = `
+      <td class="p-3 font-semibold text-slate-200 print-text-dark">${subject}</td>
+      <td class="p-3 text-center font-bold ${hasScore ? 'text-slate-100' : 'text-slate-500'} print-text-dark">${displayScore}</td>
+      <td class="p-3 text-center font-bold ${hasScore ? 'text-indigo-400' : 'text-slate-500'} print-text-dark">${evaluation.grade}</td>
+      <td class="p-3 text-center">
+        <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${!hasScore
+                            ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                            : evaluation.grade === 'F'
+                                ? 'bg-rose-950/80 text-rose-400 border border-rose-800'
+                                : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
+                        } print-card print-text-dark">
+          ${evaluation.remark}
+        </span>
+      </td>
+      <td class="p-3 text-right no-print">
+        ${!locked ?
+                            `<button onclick="studentDropSubject('${subject}')" class="text-rose-400 hover:text-rose-300 font-bold text-xs hover:underline">Drop</button>` :
+                            `<span class="text-[10px] text-slate-500 italic">Core</span>`
+                        }
+      </td>
+    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+        window.studentDropSubject = function (subjectName) {
+            if (confirm(`Are you sure you want to drop '${subjectName}'?`)) {
+                currentStudent.subjects = currentStudent.subjects.filter(s => s !== subjectName);
+                delete currentStudent.scores[subjectName];
+
+                saveStudentDataToStorage();
+                renderScoreTable();
+                renderRankingMetrics();
+                populateAvailableElectives();
+            }
+        };
+    </script>
+</body>
+
+</html>
