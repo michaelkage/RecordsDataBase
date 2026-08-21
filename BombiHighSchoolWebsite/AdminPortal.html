@@ -288,8 +288,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 <div class="reveal-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-4">
-                    <h2 class="text-lg font-bold text-indigo-400 border-b border-slate-700/50 pb-2">Create New Elective
-                        Subject</h2>
+                    <h2 class="text-lg font-bold text-indigo-400 border-b border-slate-700/50 pb-2">Create New Subject
+                    </h2>
                     <form id="createElectiveSubjectForm" class="space-y-3">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Subject Name</label>
@@ -297,6 +297,14 @@
                                 class="w-full bg-slate-900 border border-slate-700 rounded-md p-2 text-sm focus:border-indigo-500 focus:outline-none">
                         </div>
                         <div>
+                            <label class="block text-xs text-slate-400 mb-1">Subject Scope Type</label>
+                            <select id="newSubjectType" onchange="toggleDeptSelector(this.value)"
+                                class="w-full bg-slate-900 border border-slate-700 rounded-md p-2 text-sm focus:border-indigo-500 focus:outline-none">
+                                <option value="General">General Elective (All Departments)</option>
+                                <option value="DeptCore">Department Core Subject</option>
+                            </select>
+                        </div>
+                        <div id="deptSelectContainer" class="hidden">
                             <label class="block text-xs text-slate-400 mb-1">Target Department</label>
                             <select id="newSubjectDept"
                                 class="w-full bg-slate-900 border border-slate-700 rounded-md p-2 text-sm focus:border-indigo-500 focus:outline-none">
@@ -308,13 +316,13 @@
                         </div>
                         <button type="submit"
                             class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold py-2 rounded-md transition">Add
-                            Elective Subject</button>
+                            Subject</button>
                     </form>
                 </div>
 
                 <div
                     class="reveal-card lg:col-span-2 bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-4">
-                    <h2 class="text-lg font-bold text-white border-b border-slate-700/50 pb-2">Department Subject
+                    <h2 class="text-lg font-bold text-white border-b border-slate-700/50 pb-2">Curriculum Subject
                         Directory</h2>
                     <div id="subjectDirectory" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
@@ -389,16 +397,17 @@
             if (!localStorage.getItem('subjects')) {
                 const subjects = {
                     core: ["Mathematics", "English Language", "Civic Education"],
-                    ss1Core: ["Further Mathematics"],
-                    electives: {
-                        "Technical": ["Technical Drawing", "Applied Electricity", "Geography", "Physical Education", "Economics", "Basic Electricity", "Visual Arts", "Food and Nutrition", "Digital Technologies", "Yoruba", "French"],
-
-                        "Science": ["Physics", "Chemistry", "Biology", "Physical Education", "Economics", "Literature in English", "Basic Electricity", "Visual Arts", "Food and Nutrition", "Digital Technologies", "Yoruba", "French"],
-
-                        "Humanities": ["Government", "Literature in English", "CRK/IRS", "Economics", "Physical Education", "Geography", "Basic Electricity", "Visual Arts", "Food and Nutrition", "Digital Technologies", "Yoruba", "French"],
-
-                        "Commercial": ["Financial Accounting", "Commerce", "Economics", "Physical Education", "Geography", "Basic Electricity", "Visual Arts", "Food and Nutrition", "Digital Technologies", "Yoruba", "French"]
-                    }
+                    departmentCore: {
+                        "Technical": ["Physics", "Chemistry", "Technical Drawing"],
+                        "Science": ["Biology", "Physics", "Chemistry"],
+                        "Humanities": ["Literature in English", "Government", "Economics"],
+                        "Commercial": ["Financial Accounting", "Commerce", "Economics"]
+                    },
+                    generalElectives: [
+                        "Applied Electricity", "Geography", "Physical Education",
+                        "Basic Electricity", "Visual Arts", "Food and Nutrition",
+                        "Digital Technologies", "Yoruba", "French", "CRK/IRS"
+                    ]
                 };
                 localStorage.setItem('subjects', JSON.stringify(subjects));
             }
@@ -411,8 +420,8 @@
                     department: "Science",
                     classLevel: "SS3",
                     classArm: "Crimson",
-                    subjects: ["Mathematics", "English Language", "Civic Education", "Further Mathematics", "Physics", "Chemistry"],
-                    scores: { "Mathematics": 80, "English Language": 80, "Civic Education": 80, "Further Mathematics": 80, "Physics": 80, "Chemistry": 80 }
+                    subjects: ["Mathematics", "English Language", "Civic Education", "Biology", "Physics", "Chemistry"],
+                    scores: { "Mathematics": 80, "English Language": 80, "Civic Education": 80, "Biology": 80, "Physics": 80, "Chemistry": 80 }
                 }];
                 localStorage.setItem('students', JSON.stringify(sampleStudent));
             }
@@ -596,11 +605,9 @@
             const autoId = `BHS-${currentYear}-${nextNum}`;
 
             let initialSubjects = [...subjectsData.core];
-            if (classLevel === "SS1") {
-                initialSubjects = [...initialSubjects, ...subjectsData.ss1Core];
+            if (subjectsData.departmentCore[dept]) {
+                initialSubjects = [...initialSubjects, ...subjectsData.departmentCore[dept]];
             }
-            const deptElectives = subjectsData.electives[dept] || [];
-            initialSubjects = [...initialSubjects, ...deptElectives];
 
             const initialScores = {};
             initialSubjects.forEach(sub => initialScores[sub] = null);
@@ -705,8 +712,7 @@
             grid.innerHTML = '';
 
             availableSelect.innerHTML = '<option value="">-- Assign Extra Subject --</option>';
-            const allElectives = Object.values(subjectsData.electives).flat();
-            const unassigned = allElectives.filter(sub => !student.subjects.includes(sub));
+            const unassigned = (subjectsData.generalElectives || []).filter(sub => !student.subjects.includes(sub));
 
             unassigned.forEach(sub => {
                 availableSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
@@ -725,7 +731,7 @@
 
             const isProtectedCore = (subject) => {
                 if (subjectsData.core.includes(subject)) return true;
-                if (student.classLevel === "SS1" && subjectsData.ss1Core.includes(subject)) return true;
+                if (subjectsData.departmentCore[student.department] && subjectsData.departmentCore[student.department].includes(subject)) return true;
                 return false;
             };
 
@@ -787,47 +793,53 @@
             const container = document.getElementById('subjectDirectory');
             container.innerHTML = '';
 
-            Object.keys(subjectsData.electives).forEach(dept => {
+            // Render Department Cores
+            Object.keys(subjectsData.departmentCore).forEach(dept => {
                 const box = document.createElement('div');
                 box.className = "bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2";
                 box.innerHTML = `
-          <h3 class="text-xs font-bold uppercase text-indigo-400 tracking-wider">${dept} Department</h3>
+          <h3 class="text-xs font-bold uppercase text-indigo-400 tracking-wider">${dept} Department Core</h3>
           <ul class="text-xs text-slate-300 space-y-1.5">
-            ${subjectsData.electives[dept].map(s => `
+            ${subjectsData.departmentCore[dept].map(s => `
               <li class="flex items-center justify-between bg-slate-800/40 px-2 py-1 rounded border border-slate-700/40">
                 <span class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>${s}</span>
-                <button onclick="removeSubjectFromDirectory('${dept}', '${s}')" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold">Delete</button>
+                <button onclick="removeSubjectFromDirectory('${dept}', '${s}', 'DeptCore')" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold">Delete</button>
               </li>
             `).join('')}
           </ul>
         `;
                 container.appendChild(box);
             });
+
+            // Render General Electives
+            const genBox = document.createElement('div');
+            genBox.className = "bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2 md:col-span-2";
+            genBox.innerHTML = `
+      <h3 class="text-xs font-bold uppercase text-emerald-400 tracking-wider">General Electives (All Departments)</h3>
+      <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-300">
+        ${subjectsData.generalElectives.map(s => `
+          <li class="flex items-center justify-between bg-slate-800/40 px-2 py-1 rounded border border-slate-700/40">
+            <span class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>${s}</span>
+            <button onclick="removeSubjectFromDirectory('', '${s}', 'General')" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold">Delete</button>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+            container.appendChild(genBox);
         }
 
-        window.removeSubjectFromDirectory = function (dept, subjectName) {
-            if (confirm(`Delete '${subjectName}' from the ${dept} department electives?`)) {
+        window.removeSubjectFromDirectory = function (dept, subjectName, scope) {
+            if (confirm(`Delete '${subjectName}' from directory?`)) {
                 const subjectsData = JSON.parse(localStorage.getItem('subjects'));
-                subjectsData.electives[dept] = subjectsData.electives[dept].filter(s => s !== subjectName);
+                if (scope === 'General') {
+                    subjectsData.generalElectives = subjectsData.generalElectives.filter(s => s !== subjectName);
+                } else {
+                    subjectsData.departmentCore[dept] = subjectsData.departmentCore[dept].filter(s => s !== subjectName);
+                }
                 localStorage.setItem('subjects', JSON.stringify(subjectsData));
                 renderSubjectDirectory();
             }
         };
-
-        function handleAddSubject(e) {
-            e.preventDefault();
-            const subName = document.getElementById('newSubjectName').value.trim();
-            const dept = document.getElementById('newSubjectDept').value;
-
-            const subjectsData = JSON.parse(localStorage.getItem('subjects'));
-            if (!subjectsData.electives[dept].includes(subName)) {
-                subjectsData.electives[dept].push(subName);
-                localStorage.setItem('subjects', JSON.stringify(subjectsData));
-                renderSubjectDirectory();
-                document.getElementById('createElectiveSubjectForm').reset();
-                alert(`Subject '${subName}' added to ${dept} electives directory.`);
-            }
-        }
 
         function renderPromotionEngine() {
             const students = JSON.parse(localStorage.getItem('students')) || [];
@@ -920,6 +932,40 @@
                 renderPromotionEngine();
             }
         };
+
+        function toggleDeptSelector(val) {
+            const container = document.getElementById('deptSelectContainer');
+            if (val === 'DeptCore') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function handleAddSubject(e) {
+            e.preventDefault();
+            const subName = document.getElementById('newSubjectName').value.trim();
+            const subType = document.getElementById('newSubjectType').value;
+            const dept = document.getElementById('newSubjectDept').value;
+            const subjectsData = JSON.parse(localStorage.getItem('subjects'));
+
+            if (subType === 'General') {
+                if (!subjectsData.generalElectives.includes(subName)) {
+                    subjectsData.generalElectives.push(subName);
+                    localStorage.setItem('subjects', JSON.stringify(subjectsData));
+                    alert(`'${subName}' added as a General Elective.`);
+                }
+            } else {
+                if (!subjectsData.departmentCore[dept].includes(subName)) {
+                    subjectsData.departmentCore[dept].push(subName);
+                    localStorage.setItem('subjects', JSON.stringify(subjectsData));
+                    alert(`'${subName}' added as a Department Core for ${dept}.`);
+                }
+            }
+            document.getElementById('createElectiveSubjectForm').reset();
+            document.getElementById('deptSelectContainer').classList.add('hidden');
+            renderSubjectDirectory();
+        }
     </script>
 </body>
 

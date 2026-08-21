@@ -56,6 +56,9 @@
             <button id="openEditProfileBtn"
                 class="hidden bg-slate-800 text-indigo-400 border border-indigo-500/30 text-xs px-3 py-1.5 rounded-md hover:bg-slate-700 transition">Edit
                 Profile Name</button>
+            <button id="openChangePasswordBtn"
+                class="hidden bg-slate-800 text-amber-400 border border-amber-500/30 text-xs px-3 py-1.5 rounded-md hover:bg-slate-700 transition">Change
+                Password</button>
             <button id="printReportBtn"
                 class="hidden bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-md transition font-semibold shadow-md shadow-indigo-600/20">Print
                 Transcript</button>
@@ -70,7 +73,7 @@
         <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl max-w-md w-full shadow-2xl space-y-6">
             <div class="text-center space-y-2">
                 <h2 class="text-2xl font-bold text-white">Student Access</h2>
-                <p class="text-sm text-slate-400">Log in with your assigned Student ID and Surname password.</p>
+                <p class="text-sm text-slate-400">Log in with your assigned Student ID and password.</p>
             </div>
             <form id="studentLoginForm" class="space-y-4">
                 <div>
@@ -79,14 +82,42 @@
                         class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 transition">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Surname (Password)</label>
-                    <input type="password" id="loginSurname" required placeholder="Enter surname..."
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Password (Surname default)</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter password..."
                         class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 transition">
                 </div>
-                <p id="loginError" class="text-xs text-rose-400 hidden">Invalid Student ID or Surname.</p>
+                <p id="loginError" class="text-xs text-rose-400 hidden">Invalid Student ID or Password.</p>
                 <button type="submit"
                     class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg transition shadow-lg shadow-indigo-600/30">Access
                     Portal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal"
+        class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-white">Change Password</h3>
+            <form id="changePasswordForm" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Current Password</label>
+                    <input type="password" id="currentPass" required
+                        class="w-full bg-slate-900 border border-slate-700 rounded-md p-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">New Password</label>
+                    <input type="password" id="newPass" required
+                        class="w-full bg-slate-900 border border-slate-700 rounded-md p-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none">
+                </div>
+                <p id="passwordError" class="text-xs text-rose-400 hidden">Incorrect current password.</p>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" id="closeChangePasswordModal"
+                        class="px-4 py-2 text-xs bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-xs bg-indigo-600 text-white rounded-md hover:bg-indigo-500">Update
+                        Password</button>
+                </div>
             </form>
         </div>
     </div>
@@ -98,7 +129,7 @@
             <h3 class="text-lg font-bold text-white">Update Profile Name</h3>
             <form id="editProfileForm" class="space-y-3">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Surname (Locked/Password)</label>
+                    <label class="block text-xs text-slate-400 mb-1">Surname (Locked)</label>
                     <input type="text" id="editSurname" disabled
                         class="w-full bg-slate-900/60 border border-slate-700/60 rounded-md p-2 text-sm text-slate-400 focus:outline-none cursor-not-allowed">
                 </div>
@@ -224,8 +255,8 @@
                             class="bg-slate-900/80 text-slate-400 border-b border-slate-700 print-card print-text-dark">
                             <tr>
                                 <th class="p-3">Subject Name</th>
-                                <th class="p-3 text-center">Score / 100</th>
-                                <th class="p-3 text-center">Letter Grade</th>
+                                <th class="p-3 text-center">Score (100)</th>
+                                <th class="p-3 text-center">Grade</th>
                                 <th class="p-3 text-center">Remarks</th>
                                 <th class="p-3 text-right no-print">Manage</th>
                             </tr>
@@ -273,7 +304,6 @@
             }
         }
 
-        // Global Action Handler attached to Window scope to prevent ReferenceError crashes
         window.studentDropSubject = function (subjectName) {
             if (confirm(`Are you sure you want to drop '${subjectName}'?`)) {
                 currentStudent.subjects = currentStudent.subjects.filter(s => s !== subjectName);
@@ -296,18 +326,20 @@
             const logoutBtn = document.getElementById('logoutBtn');
             const printBtn = document.getElementById('printReportBtn');
             const openEditBtn = document.getElementById('openEditProfileBtn');
+            const openChangePasswordBtn = document.getElementById('openChangePasswordBtn');
 
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const inputId = document.getElementById('loginStudentId').value.trim();
-                const inputSurname = document.getElementById('loginSurname').value.trim();
+                const inputPassword = document.getElementById('loginPassword').value.trim();
 
                 const allStudents = JSON.parse(localStorage.getItem('students')) || [];
 
-                const matchedStudent = allStudents.find(s =>
-                    s.id.toLowerCase() === inputId.toLowerCase() &&
-                    s.surname.toLowerCase() === inputSurname.toLowerCase()
-                );
+                const matchedStudent = allStudents.find(s => {
+                    const activePass = s.password || s.surname;
+                    return s.id.toLowerCase() === inputId.toLowerCase() &&
+                        activePass.toLowerCase() === inputPassword.toLowerCase();
+                });
 
                 if (matchedStudent) {
                     currentStudent = matchedStudent;
@@ -316,6 +348,7 @@
                     logoutBtn.classList.remove('hidden');
                     printBtn.classList.remove('hidden');
                     openEditBtn.classList.remove('hidden');
+                    openChangePasswordBtn.classList.remove('hidden');
 
                     initStudentDashboard();
                 } else {
@@ -331,13 +364,45 @@
                 window.print();
             });
 
+            // Password Modification Modal Controls
+            const changePasswordModal = document.getElementById('changePasswordModal');
+            const changePasswordForm = document.getElementById('changePasswordForm');
+            const passwordError = document.getElementById('passwordError');
+
+            openChangePasswordBtn.addEventListener('click', () => {
+                passwordError.classList.add('hidden');
+                changePasswordForm.reset();
+                changePasswordModal.classList.remove('hidden');
+            });
+
+            document.getElementById('closeChangePasswordModal').addEventListener('click', () => {
+                changePasswordModal.classList.add('hidden');
+            });
+
+            changePasswordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const currentPassInput = document.getElementById('currentPass').value.trim();
+                const newPassInput = document.getElementById('newPass').value.trim();
+
+                const activePassword = currentStudent.password || currentStudent.surname;
+
+                if (currentPassInput.toLowerCase() === activePassword.toLowerCase()) {
+                    currentStudent.password = newPassInput;
+                    saveStudentDataToStorage();
+                    changePasswordModal.classList.add('hidden');
+                    alert('Password updated successfully!');
+                } else {
+                    passwordError.classList.remove('hidden');
+                }
+            });
+
             // Edit Name Modal Controls
             const editModal = document.getElementById('editProfileModal');
             openEditBtn.addEventListener('click', () => {
                 document.getElementById('editSurname').value = currentStudent.surname;
 
                 const nameParts = currentStudent.fullName.split(' ');
-                nameParts.shift(); // remove surname
+                nameParts.shift();
                 document.getElementById('editOtherNames').value = nameParts.join(' ');
 
                 editModal.classList.remove('hidden');
@@ -353,7 +418,6 @@
                 if (newOtherNames) {
                     currentStudent.fullName = `${currentStudent.surname} ${newOtherNames}`;
 
-                    // Sync storage preserving strict student ID reference
                     saveStudentDataToStorage();
                     renderProfileDetails();
                     editModal.classList.add('hidden');
@@ -422,7 +486,6 @@
             const currentAvg = calculateStudentAverage(currentStudent);
             document.getElementById('overallAvg').textContent = currentAvg !== "N/A" ? `${currentAvg}%` : "N/A";
 
-            // Helper to sort averages cleanly handling string "N/A" edge cases
             const sortRankings = (a, b) => {
                 if (a.average === "N/A" && b.average === "N/A") return 0;
                 if (a.average === "N/A") return 1;
@@ -430,7 +493,6 @@
                 return Number(b.average) - Number(a.average);
             };
 
-            // Class Arm Ranking
             const classPeerGroup = processedStudents
                 .filter(s => s.classLevel === currentStudent.classLevel && s.classArm === currentStudent.classArm)
                 .sort(sortRankings);
@@ -439,7 +501,6 @@
             document.getElementById('classRank').textContent = (classRank > 0 && currentAvg !== "N/A") ? `#${classRank}` : '--';
             document.getElementById('classRankTotal').textContent = `Out of ${classPeerGroup.length} students in ${currentStudent.classLevel} ${currentStudent.classArm}`;
 
-            // Department Ranking
             const deptPeerGroup = processedStudents
                 .filter(s => s.department === currentStudent.department)
                 .sort(sortRankings);
