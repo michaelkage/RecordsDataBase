@@ -7,23 +7,11 @@
     <title>Bombi High School - Admin Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* CSS Snap Scroll */
-        .snap-container {
-            scroll-snap-type: y mandatory;
-            overflow-y: scroll;
-            height: 100vh;
-        }
-
-        .snap-section {
-            scroll-snap-align: start;
-            scroll-snap-stop: always;
-        }
-
-        /* Scroll Reveal & Construct Transitions */
+        /* Smooth, readable layout transitions without forcing scroll locks */
         .reveal-card {
             opacity: 0;
-            transform: translateY(40px) scale(0.95);
-            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(20px) scale(0.98);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .reveal-card.active {
@@ -33,7 +21,7 @@
     </style>
 </head>
 
-<body class="bg-slate-900 text-slate-100 font-sans snap-container antialiased">
+<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen">
 
     <!-- Top Sticky Navigation Bar -->
     <nav
@@ -158,10 +146,10 @@
     </div>
 
     <!-- Main App Container -->
-    <main id="adminApp" class="hidden">
+    <main id="adminApp" class="hidden space-y-16 pb-16">
 
         <!-- SECTION 1: Student Directory & Registration -->
-        <section class="snap-section min-h-screen pt-24 pb-12 px-6 max-w-7xl mx-auto flex flex-col justify-center">
+        <section class="pt-24 px-6 max-w-7xl mx-auto">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 <!-- Registration Form -->
@@ -239,7 +227,7 @@
         </section>
 
         <!-- SECTION 2: Cascading Score Entry, Add & Remove Subjects -->
-        <section class="snap-section min-h-screen pt-24 pb-12 px-6 max-w-7xl mx-auto flex flex-col justify-center">
+        <section class="px-6 max-w-7xl mx-auto">
             <div class="reveal-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-6">
                 <h2 class="text-xl font-bold text-indigo-400 border-b border-slate-700/50 pb-3">Score & Subject
                     Management</h2>
@@ -296,13 +284,13 @@
         </section>
 
         <!-- SECTION 3: Subject Creation & Directory Management -->
-        <section class="snap-section min-h-screen pt-24 pb-12 px-6 max-w-7xl mx-auto flex flex-col justify-center">
+        <section class="px-6 max-w-7xl mx-auto">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 <div class="reveal-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-4">
                     <h2 class="text-lg font-bold text-indigo-400 border-b border-slate-700/50 pb-2">Create New Elective
                         Subject</h2>
-                    <form id="addSubjectForm" class="space-y-3">
+                    <form id="createElectiveSubjectForm" class="space-y-3">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Subject Name</label>
                             <input type="text" id="newSubjectName" required placeholder="e.g. Data Processing"
@@ -335,7 +323,7 @@
         </section>
 
         <!-- SECTION 4: Configurable Promotion Engine -->
-        <section class="snap-section min-h-screen pt-24 pb-12 px-6 max-w-7xl mx-auto flex flex-col justify-center">
+        <section class="px-6 max-w-7xl mx-auto">
             <div class="reveal-card bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl shadow-xl space-y-6">
                 <div
                     class="border-b border-slate-700/50 pb-3 flex flex-col md:flex-row justify-between md:items-center gap-4">
@@ -403,10 +391,13 @@
                     core: ["Mathematics", "English Language", "Civic Education"],
                     ss1Core: ["Further Mathematics"],
                     electives: {
-                        Technical: ["Technical Drawing", "Applied Electricity", "Auto Mechanics"],
-                        Science: ["Physics", "Chemistry", "Biology", "Agricultural Science"],
-                        Humanities: ["Government", "Literature in English", "CRK/IRS"],
-                        Commercial: ["Financial Accounting", "Commerce", "Economics"]
+                        "Technical": ["Technical Drawing", "Applied Electricity", "Geography", "Physical Education", "Economics", "Basic Electricity", "Visual Arts", "Food and Nutrition", "Digital Technologies", "Yoruba", "French"],
+
+                        "Science": ["Physics", "Chemistry", "Biology", "Physical Education", "Economics", "Literature in English", "Basic Electricity", "Visual Arts", "Food and Nutrition", "Digital Technologies", "Yoruba", "French"],
+
+                        "Humanities": ["Government", "Literature in English", "CRK/IRS", "Economics", "Physical Education", "Geography", "Basic Electricity", "Visual Arts", "Food and Nutrition", "Digital Technologies", "Yoruba", "French"],
+
+                        "Commercial": ["Financial Accounting", "Commerce", "Economics", "Physical Education", "Geography", "Basic Electricity", "Visual Arts", "Food and Nutrition", "Digital Technologies", "Yoruba", "French"]
                     }
                 };
                 localStorage.setItem('subjects', JSON.stringify(subjects));
@@ -415,13 +406,13 @@
             if (!localStorage.getItem('students')) {
                 const sampleStudent = [{
                     id: "BHS-2026-001",
-                    surname: "Okonkwo",
-                    fullName: "Okonkwo Emeka",
+                    surname: "Ayeni",
+                    fullName: "Ayodeji",
                     department: "Science",
-                    classLevel: "SS1",
-                    classArm: "Gold",
+                    classLevel: "SS3",
+                    classArm: "Crimson",
                     subjects: ["Mathematics", "English Language", "Civic Education", "Further Mathematics", "Physics", "Chemistry"],
-                    scores: { "Mathematics": 78, "English Language": 65, "Civic Education": 82, "Further Mathematics": 54, "Physics": 71, "Chemistry": 60 }
+                    scores: { "Mathematics": 80, "English Language": 80, "Civic Education": 80, "Further Mathematics": 80, "Physics": 80, "Chemistry": 80 }
                 }];
                 localStorage.setItem('students', JSON.stringify(sampleStudent));
             }
@@ -504,7 +495,7 @@
 
             document.getElementById('studentSearch').addEventListener('input', renderStudentTable);
             document.getElementById('addStudentForm').addEventListener('submit', handleAddStudent);
-            document.getElementById('addSubjectForm').addEventListener('submit', handleAddSubject);
+            document.getElementById('createElectiveSubjectForm').addEventListener('submit', handleAddSubject);
             document.getElementById('runPromotionBtn').addEventListener('click', executeBulkPromotion);
 
             document.getElementById('minAvgScore').addEventListener('input', renderPromotionEngine);
@@ -520,7 +511,7 @@
                         entry.target.classList.add('active');
                     }
                 });
-            }, { threshold: 0.15 });
+            }, { threshold: 0.1 });
 
             cards.forEach(card => observer.observe(card));
         }
@@ -651,55 +642,52 @@
             const armFilter = document.getElementById('scoreArmFilter');
             const studentFilter = document.getElementById('scoreStudentFilter');
 
-            classFilter.addEventListener('change', () => {
-                const students = JSON.parse(localStorage.getItem('students')) || [];
-                const selectedClass = classFilter.value;
+            const currentClass = classFilter.value;
+            const currentArm = armFilter.value;
+            const currentStudentId = studentFilter.value;
 
+            const students = JSON.parse(localStorage.getItem('students')) || [];
+
+            if (currentClass) {
+                const availableArms = [...new Set(students.filter(s => s.classLevel === currentClass).map(s => s.classArm))];
+                armFilter.innerHTML = '<option value="">-- Choose Arm --</option>' + availableArms.map(arm => `<option value="${arm}">${arm}</option>`).join('');
+                armFilter.disabled = false;
+                if (availableArms.includes(currentArm)) {
+                    armFilter.value = currentArm;
+                } else {
+                    armFilter.value = "";
+                }
+            } else {
                 armFilter.innerHTML = '<option value="">-- Choose Arm --</option>';
+                armFilter.disabled = true;
+            }
+
+            if (classFilter.value && armFilter.value) {
+                const filteredStudents = students.filter(s => s.classLevel === classFilter.value && s.classArm === armFilter.value);
+                studentFilter.innerHTML = '<option value="">-- Choose Student --</option>' + filteredStudents.map(s => `<option value="${s.id}">${s.fullName} (${s.id})</option>`).join('');
+                studentFilter.disabled = false;
+                if (filteredStudents.some(s => s.id === currentStudentId)) {
+                    studentFilter.value = currentStudentId;
+                    renderSubjectScoreInputs(currentStudentId);
+                } else {
+                    studentFilter.value = "";
+                    document.getElementById('subjectScoreContainer').classList.add('hidden');
+                }
+            } else {
                 studentFilter.innerHTML = '<option value="">-- Choose Student --</option>';
                 studentFilter.disabled = true;
                 document.getElementById('subjectScoreContainer').classList.add('hidden');
+            }
 
-                if (!selectedClass) {
-                    armFilter.disabled = true;
-                    return;
-                }
-
-                const availableArms = [...new Set(students.filter(s => s.classLevel === selectedClass).map(s => s.classArm))];
-                availableArms.forEach(arm => {
-                    armFilter.innerHTML += `<option value="${arm}">${arm}</option>`;
-                });
-                armFilter.disabled = false;
-            });
-
-            armFilter.addEventListener('change', () => {
-                const students = JSON.parse(localStorage.getItem('students')) || [];
-                const selectedClass = classFilter.value;
-                const selectedArm = armFilter.value;
-
-                studentFilter.innerHTML = '<option value="">-- Choose Student --</option>';
-                document.getElementById('subjectScoreContainer').classList.add('hidden');
-
-                if (!selectedArm) {
-                    studentFilter.disabled = true;
-                    return;
-                }
-
-                const filteredStudents = students.filter(s => s.classLevel === selectedClass && s.classArm === selectedArm);
-                filteredStudents.forEach(s => {
-                    studentFilter.innerHTML += `<option value="${s.id}">${s.fullName} (${s.id})</option>`;
-                });
-                studentFilter.disabled = false;
-            });
-
-            studentFilter.addEventListener('change', () => {
-                const selectedId = studentFilter.value;
-                if (selectedId) {
-                    renderSubjectScoreInputs(selectedId);
+            classFilter.onchange = () => setupCascadingScoreSelectors();
+            armFilter.onchange = () => setupCascadingScoreSelectors();
+            studentFilter.onchange = () => {
+                if (studentFilter.value) {
+                    renderSubjectScoreInputs(studentFilter.value);
                 } else {
                     document.getElementById('subjectScoreContainer').classList.add('hidden');
                 }
-            });
+            };
         }
 
         function renderSubjectScoreInputs(studentId) {
@@ -716,7 +704,6 @@
             title.textContent = `Scoring sheet for: ${student.fullName} (${student.classLevel} ${student.classArm})`;
             grid.innerHTML = '';
 
-            // Populate available subject options (all electives not currently taken)
             availableSelect.innerHTML = '<option value="">-- Assign Extra Subject --</option>';
             const allElectives = Object.values(subjectsData.electives).flat();
             const unassigned = allElectives.filter(sub => !student.subjects.includes(sub));
@@ -725,7 +712,6 @@
                 availableSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
             });
 
-            // Add Subject Button Action
             document.getElementById('addSubjectToStudentBtn').onclick = () => {
                 const chosen = availableSelect.value;
                 if (chosen && !student.subjects.includes(chosen)) {
@@ -771,7 +757,8 @@
                 inputs.forEach(inp => {
                     const sub = inp.getAttribute('data-subject');
                     const rawVal = inp.value.trim();
-                    student.scores[sub] = rawVal === "" ? null : Math.min(100, Math.max(0, parseInt(rawVal)));
+                    const num = parseInt(rawVal, 10);
+                    student.scores[sub] = (rawVal === "" || isNaN(num)) ? null : Math.min(100, Math.max(0, num));
                 });
 
                 localStorage.setItem('students', JSON.stringify(students));
@@ -837,7 +824,7 @@
                 subjectsData.electives[dept].push(subName);
                 localStorage.setItem('subjects', JSON.stringify(subjectsData));
                 renderSubjectDirectory();
-                document.getElementById('addSubjectForm').reset();
+                document.getElementById('createElectiveSubjectForm').reset();
                 alert(`Subject '${subName}' added to ${dept} electives directory.`);
             }
         }
@@ -852,11 +839,11 @@
             const minEng = parseFloat(document.getElementById('minEngScore').value) || 0;
 
             students.forEach(s => {
-                const validScores = Object.values(s.scores).filter(val => val !== null && val !== undefined && val !== "");
-                const avg = validScores.length ? (validScores.reduce((a, b) => a + Number(b), 0) / validScores.length).toFixed(1) : 0;
+                const validScores = Object.values(s.scores).filter(val => val !== null && val !== undefined && val !== "" && !isNaN(val)).map(Number);
+                const avg = validScores.length ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1) : 0;
 
-                const mathScore = s.scores["Mathematics"] || 0;
-                const engScore = s.scores["English Language"] || 0;
+                const mathScore = Number(s.scores["Mathematics"]) || 0;
+                const engScore = Number(s.scores["English Language"]) || 0;
 
                 const isEligible = avg >= minAvg && mathScore >= minMath && engScore >= minEng;
 
@@ -888,10 +875,10 @@
             const minEng = parseFloat(document.getElementById('minEngScore').value) || 0;
 
             students.forEach(s => {
-                const scores = Object.values(s.scores);
-                const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-                const mathScore = s.scores["Mathematics"] || 0;
-                const engScore = s.scores["English Language"] || 0;
+                const validScores = Object.values(s.scores).filter(val => val !== null && val !== undefined && val !== "" && !isNaN(val)).map(Number);
+                const avg = validScores.length ? (validScores.reduce((a, b) => a + b, 0) / validScores.length) : 0;
+                const mathScore = Number(s.scores["Mathematics"]) || 0;
+                const engScore = Number(s.scores["English Language"]) || 0;
 
                 if (avg >= minAvg && mathScore >= minMath && engScore >= minEng) {
                     if (s.classLevel === "SS1") s.classLevel = "SS2";
@@ -916,6 +903,7 @@
                 else if (s.classLevel === "SS3") s.classLevel = "Graduated";
                 localStorage.setItem('students', JSON.stringify(students));
                 renderStudentTable();
+                setupCascadingScoreSelectors();
                 renderPromotionEngine();
             }
         };
@@ -928,6 +916,7 @@
                 else if (s.classLevel === "SS2") s.classLevel = "SS1";
                 localStorage.setItem('students', JSON.stringify(students));
                 renderStudentTable();
+                setupCascadingScoreSelectors();
                 renderPromotionEngine();
             }
         };
