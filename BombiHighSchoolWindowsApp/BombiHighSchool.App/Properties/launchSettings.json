@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "BombiHighSchool.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "BombiHighSchool.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
