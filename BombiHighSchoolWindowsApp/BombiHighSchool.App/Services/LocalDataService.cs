@@ -5,7 +5,6 @@ namespace BombiHighSchool.App.Services;
 
 public class LocalDataService
 {
-    private readonly string _dataDirectory;
     private readonly string _databasePath;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -16,46 +15,41 @@ public class LocalDataService
 
     public LocalDataService()
     {
-        _dataDirectory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        var appFolder = Path.Combine(
+            Environment.GetFolderPath(
+                Environment.SpecialFolder.LocalApplicationData),
             "BombiHighSchool"
         );
 
-        _databasePath = Path.Combine(_dataDirectory, "database.json");
+        Directory.CreateDirectory(appFolder);
+
+        _databasePath = Path.Combine(
+            appFolder,
+            "database.json"
+        );
     }
 
     public async Task<SchoolData> LoadAsync()
     {
-        Directory.CreateDirectory(_dataDirectory);
-
         if (!File.Exists(_databasePath))
         {
-            var data = CreateDefaultData();
+            var data = new SchoolData();
+
             await SaveAsync(data);
+
             return data;
         }
 
-        try
-        {
-            var json = await File.ReadAllTextAsync(_databasePath);
+        var json = await File.ReadAllTextAsync(_databasePath);
 
-            return JsonSerializer.Deserialize<SchoolData>(
-                json,
-                JsonOptions
-            ) ?? CreateDefaultData();
-        }
-        catch
-        {
-            // If the file is damaged or unreadable,
-            // start with a fresh database.
-            return CreateDefaultData();
-        }
+        return JsonSerializer.Deserialize<SchoolData>(
+            json,
+            JsonOptions
+        ) ?? new SchoolData();
     }
 
     public async Task SaveAsync(SchoolData data)
     {
-        Directory.CreateDirectory(_dataDirectory);
-
         var json = JsonSerializer.Serialize(
             data,
             JsonOptions
@@ -65,28 +59,5 @@ public class LocalDataService
             _databasePath,
             json
         );
-    }
-
-    private static SchoolData CreateDefaultData()
-    {
-        return new SchoolData
-        {
-            Admin = new AdminAccount
-            {
-                Password = "admin"
-            },
-
-            Students = [],
-
-            Subjects =
-            [
-                "Mathematics",
-                "English Language",
-                "Physics",
-                "Chemistry",
-                "Biology",
-                "Computer Science"
-            ]
-        };
     }
 }
