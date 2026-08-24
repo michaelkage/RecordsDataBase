@@ -13,10 +13,10 @@ public sealed class StudentService
         _authenticationService = new AuthenticationService(_dataService);
     }
 
-    public async Task<List<Student>> GetAllAsync()
+    public async Task<List<Student>> GetAllAsync(bool includeArchived = false)
     {
         var data = await _dataService.LoadAsync();
-        return data.Students.ToList();
+        return data.Students.Where(s => includeArchived || !IsArchived(data, s.Id)).ToList();
     }
 
     public async Task<Student> AddAsync(string name, int age, string gender, string classLevel, string arm, string department)
@@ -39,18 +39,32 @@ public sealed class StudentService
         await _dataService.SaveAsync(data);
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task ArchiveAsync(string id)
     {
         var data = await _dataService.LoadAsync();
-        var student = data.Students.FirstOrDefault(s => s.Id == id);
-        if (student is null) return;
-        data.Students.Remove(student);
-        data.StudentDetails.RemoveAll(d => d.StudentId == id);
-        data.Scores.RemoveAll(s => s.StudentId == id);
-        data.Users.RemoveAll(u => u.StudentId == id && u.Role.Equals("Student", StringComparison.OrdinalIgnoreCase));
+        var student = data.Students.FirstOrDefault(s => s.Id == id) ?? throw new InvalidOperationException("The student could not be found.");
+        var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == id);
+        if (details is not null) details.Status = "Archived";
+        var account = data.Users.FirstOrDefault(u => u.StudentId == id && u.Role.Equals("Student", StringComparison.OrdinalIgnoreCase));
+        if (account is not null) account.IsEnabled = false;
         await _dataService.SaveAsync(data);
     }
 
+    public async Task RestoreAsync(string id)
+    {
+        var data = await _dataService.LoadAsync();
+        var student = data.Students.FirstOrDefault(s => s.Id == id) ?? throw new InvalidOperationException("The student could not be found.");
+        var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == id);
+        if (details is not null) details.Status = "Active";
+        var account = data.Users.FirstOrDefault(u => u.StudentId == id && u.Role.Equals("Student", StringComparison.OrdinalIgnoreCase));
+        if (account is not null) account.IsEnabled = true;
+        await _dataService.SaveAsync(data);
+    }
+
+    public Task ResetStudentPasswordAsync(string id, string newPassword) => _authenticationService.SetStudentPasswordAsync(id, newPassword);
+    public Task SetStudentAccountEnabledAsync(string id, bool enabled) => _authenticationService.SetStudentEnabledAsync(id, enabled);
+
+    private static bool IsArchived(SchoolData data, string id) => data.StudentDetails.FirstOrDefault(d => d.StudentId == id)?.Status.Equals("Archived", StringComparison.OrdinalIgnoreCase) == true;
     private static string GenerateNextId(IEnumerable<Student> students)
     {
         var nextNumber = students.Select(s => s.Id).Where(id => id.StartsWith("BHS", StringComparison.OrdinalIgnoreCase)).Select(id => id[3..]).Select(value => int.TryParse(value, out var number) ? number : 0).DefaultIfEmpty(0).Max() + 1;
