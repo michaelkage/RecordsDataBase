@@ -11,12 +11,7 @@ public sealed partial class MainPage : Page
     private readonly LocalDataService _dataService = new();
 
     public MainPage() { InitializeComponent(); Loaded += MainPage_Loaded; }
-
-    private void MainPage_Loaded(object sender, RoutedEventArgs e)
-    {
-        AppNavigation.SelectedItem = AppNavigation.MenuItems[0];
-        ContentFrame.Navigate(typeof(DashboardPage));
-    }
+    private void MainPage_Loaded(object sender, RoutedEventArgs e) { AppNavigation.SelectedItem = AppNavigation.MenuItems[0]; ContentFrame.Navigate(typeof(DashboardPage)); }
 
     private void Navigation_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
@@ -35,19 +30,15 @@ public sealed partial class MainPage : Page
             case "Scores": ContentFrame.Navigate(typeof(ScoresPage)); break;
             case "Rankings": ContentFrame.Navigate(typeof(RankingsPage)); break;
             case "Settings": ContentFrame.Navigate(typeof(SettingsPage)); break;
-            case "Logout": SessionService.SignOut(); Frame?.Navigate(typeof(LoginPage)); break;
+            case "Logout": SessionService.Clear(); Frame?.Navigate(typeof(LoginPage)); break;
             default: ContentFrame.Navigate(typeof(DashboardPage)); break;
         }
     }
 
     private void MainPage_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == Windows.System.VirtualKey.K &&
-            Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))
-        {
-            GlobalSearchBox.Focus(FocusState.Keyboard);
-            e.Handled = true;
-        }
+        if (e.Key == Windows.System.VirtualKey.K && Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))
+        { GlobalSearchBox.Focus(FocusState.Keyboard); e.Handled = true; }
     }
 
     private void GlobalSearch_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
@@ -66,16 +57,13 @@ public sealed partial class MainPage : Page
 
     private async void Backup_Click(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            await _dataService.CreateBackupAsync();
-            var dialog = new ContentDialog { Title = "Backup created", Content = "The local school database has been backed up successfully.", CloseButtonText = "OK", XamlRoot = XamlRoot };
-            await dialog.ShowAsync();
-        }
-        catch (Exception ex)
-        {
-            var dialog = new ContentDialog { Title = "Backup failed", Content = ex.Message, CloseButtonText = "OK", XamlRoot = XamlRoot };
-            await dialog.ShowAsync();
-        }
+        try { await _dataService.CreateBackupAsync(); await ShowMessageAsync("Backup created", "The local school database has been backed up successfully."); }
+        catch (Exception ex) { await ShowMessageAsync("Backup failed", ex.Message); }
+    }
+
+    private async Task ShowMessageAsync(string title, string message)
+    {
+        var dialog = new ContentDialog { Title = title, Content = message, CloseButtonText = "OK", XamlRoot = XamlRoot };
+        await dialog.ShowAsync();
     }
 }
