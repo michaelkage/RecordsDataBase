@@ -16,6 +16,7 @@ public partial class StudentSubjectsViewModel : ObservableObject
     [ObservableProperty] private Subject? selectedEnrolledSubject;
     [ObservableProperty] private string statusMessage = "";
     private string? _studentId;
+    private bool CanChangeSubjects => false;
 
     public async Task LoadAsync(string studentId)
     {
@@ -33,9 +34,9 @@ public partial class StudentSubjectsViewModel : ObservableObject
         catch (Exception ex) { StatusMessage = $"Could not load subjects: {ex.Message}"; }
     }
 
-    [RelayCommand]
-    private void Enroll() => StatusMessage = "Students cannot enroll subjects directly. Ask the school administrator to assign the subject.";
+    [RelayCommand(CanExecute = nameof(CanChangeSubjects))]
+    private void Enroll() { }
 
-    [RelayCommand]
-    private void Remove() => StatusMessage = "Students cannot remove subjects directly. Ask the school administrator to change the enrollment.";
+    [RelayCommand(CanExecute = nameof(CanChangeSubjects))]
+    private void Remove() { }
 }
