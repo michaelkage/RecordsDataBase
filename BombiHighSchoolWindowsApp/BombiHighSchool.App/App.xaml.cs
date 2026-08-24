@@ -4,14 +4,13 @@ namespace BombiHighSchool.App;
 
 public partial class App : Application
 {
-    public App()
-    {
-        InitializeComponent();
-    }
+    public static MainWindow? MainWindow { get; private set; }
+
+    public App() { InitializeComponent(); }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        var window = new MainWindow();
-        window.Activate();
+        MainWindow = new MainWindow();
+        MainWindow.Activate();
     }
 }
