@@ -8,4 +8,5 @@ public class UserAccount
     public string PasswordHash { get; set; } = "";
     public string PasswordSalt { get; set; } = "";
     public bool MustChangePassword { get; set; }
+    public bool IsEnabled { get; set; } = true;
 }
