@@ -42,12 +42,7 @@ public partial class StudentsViewModel : ObservableObject
     public bool IsSeniorClass => ClassLevel.StartsWith("SS", StringComparison.OrdinalIgnoreCase);
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
-    partial void OnClassLevelChanged(string value)
-    {
-        if (!IsSeniorClass) Department = "General";
-        else if (Department == "General") Department = "";
-        OnPropertyChanged(nameof(IsSeniorClass));
-    }
+    partial void OnClassLevelChanged(string value) { if (!IsSeniorClass) Department = "General"; else if (Department == "General") Department = ""; OnPropertyChanged(nameof(IsSeniorClass)); }
     partial void OnIsEditingChanged(bool value) { OnPropertyChanged(nameof(FormTitle)); OnPropertyChanged(nameof(SaveButtonText)); }
 
     [RelayCommand]
@@ -66,7 +61,6 @@ public partial class StudentsViewModel : ObservableObject
         if (!int.TryParse(AgeText, out var age) || age is < 1 or > 100) { StatusMessage = "Enter a valid age."; return; }
         if (string.IsNullOrWhiteSpace(Gender) || string.IsNullOrWhiteSpace(ClassLevel) || string.IsNullOrWhiteSpace(Arm)) { StatusMessage = "Select gender, class and arm."; return; }
         if (IsSeniorClass && string.IsNullOrWhiteSpace(Department)) { StatusMessage = "Select a department for senior students."; return; }
-
         IsBusy = true;
         try
         {
@@ -74,7 +68,7 @@ public partial class StudentsViewModel : ObservableObject
             if (IsEditing && SelectedStudent is not null)
             {
                 student = SelectedStudent;
-                ApplyCoreFields(student, age);
+                student.Name = Name.Trim(); student.Age = age; student.Gender = Gender.Trim(); student.ClassLevel = ClassLevel.Trim();
                 await _studentService.UpdateAsync(student);
                 StatusMessage = $"{student.Name} updated successfully.";
             }
@@ -83,24 +77,14 @@ public partial class StudentsViewModel : ObservableObject
                 student = await _studentService.AddAsync(Name, age, Gender, ClassLevel, Arm, Department);
                 StatusMessage = $"{student.Name} added as {student.Id}. Initial student password: Welcome123!";
             }
-
             var data = await _dataService.LoadAsync();
             var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
             if (details is null) { details = new StudentDetails { StudentId = student.Id }; data.StudentDetails.Add(details); }
             details.Arm = Arm.Trim(); details.Department = Department.Trim(); details.DateOfBirth = DateOfBirth.Trim(); details.AdmissionNumber = AdmissionNumber.Trim(); details.ParentName = ParentName.Trim(); details.ParentPhone = ParentPhone.Trim(); details.Address = Address.Trim(); details.Email = Email.Trim(); details.Status = Status;
-            await _dataService.SaveAsync(data);
-            await ReloadWithoutBusyMessageAsync();
-            ClearForm();
+            await _dataService.SaveAsync(data); await ReloadWithoutBusyMessageAsync(); ClearForm();
         }
         catch (Exception ex) { StatusMessage = $"Could not save student: {ex.Message}"; }
         finally { IsBusy = false; }
-    }
-
-    private void ApplyCoreFields(Student student, int age)
-    {
-        student.Name = Name.Trim(); student.Age = age; student.Gender = Gender.Trim(); student.ClassLevel = ClassLevel.Trim();
-        student.Arm = Arm.Trim(); student.Department = Department.Trim(); student.DateOfBirth = DateOfBirth.Trim(); student.AdmissionNumber = AdmissionNumber.Trim();
-        student.ParentName = ParentName.Trim(); student.ParentPhone = ParentPhone.Trim(); student.Address = Address.Trim(); student.Email = Email.Trim(); student.Status = Status.Trim();
     }
 
     [RelayCommand]
@@ -108,20 +92,15 @@ public partial class StudentsViewModel : ObservableObject
     {
         if (student is null) return;
         SelectedStudent = student; Name = student.Name; AgeText = student.Age.ToString(); Gender = student.Gender; ClassLevel = student.ClassLevel;
-        Arm = student.Arm; Department = student.Department; DateOfBirth = student.DateOfBirth; AdmissionNumber = student.AdmissionNumber; ParentName = student.ParentName; ParentPhone = student.ParentPhone; Address = student.Address; Email = student.Email; Status = student.Status;
-        if (string.IsNullOrWhiteSpace(Arm) || string.IsNullOrWhiteSpace(Department))
-        {
-            var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
-            Arm = details?.Arm ?? ""; Department = details?.Department ?? ""; DateOfBirth = details?.DateOfBirth ?? ""; AdmissionNumber = details?.AdmissionNumber ?? ""; ParentName = details?.ParentName ?? ""; ParentPhone = details?.ParentPhone ?? ""; Address = details?.Address ?? ""; Email = details?.Email ?? ""; Status = details?.Status ?? "Active";
-        }
+        var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
+        Arm = details?.Arm ?? ""; Department = details?.Department ?? ""; DateOfBirth = details?.DateOfBirth ?? ""; AdmissionNumber = details?.AdmissionNumber ?? ""; ParentName = details?.ParentName ?? ""; ParentPhone = details?.ParentPhone ?? ""; Address = details?.Address ?? ""; Email = details?.Email ?? ""; Status = details?.Status ?? "Active";
         IsEditing = true; StatusMessage = $"Editing {student.Id}.";
     }
 
     [RelayCommand]
     private async Task DeleteAsync(Student? student)
     {
-        if (student is null) return;
-        IsBusy = true;
+        if (student is null) return; IsBusy = true;
         try { await _studentService.DeleteAsync(student.Id); StatusMessage = $"{student.Name} deleted."; await ReloadWithoutBusyMessageAsync(); ClearForm(); }
         catch (Exception ex) { StatusMessage = $"Could not delete student: {ex.Message}"; }
         finally { IsBusy = false; }
@@ -129,6 +108,6 @@ public partial class StudentsViewModel : ObservableObject
 
     [RelayCommand] private void CancelEdit() { ClearForm(); StatusMessage = "Form cleared."; }
     private async Task ReloadWithoutBusyMessageAsync() { _allStudents = await _studentService.GetAllAsync(); ApplyFilter(); }
-    private void ApplyFilter() { var q = SearchText.Trim(); var filtered = string.IsNullOrWhiteSpace(q) ? _allStudents : _allStudents.Where(s => s.Id.Contains(q, StringComparison.OrdinalIgnoreCase) || s.Name.Contains(q, StringComparison.OrdinalIgnoreCase) || s.ClassLevel.Contains(q, StringComparison.OrdinalIgnoreCase) || s.Arm.Contains(q, StringComparison.OrdinalIgnoreCase) || s.Department.Contains(q, StringComparison.OrdinalIgnoreCase) || s.Gender.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList(); Students = new ObservableCollection<Student>(filtered); }
+    private void ApplyFilter() { var q = SearchText.Trim(); var filtered = string.IsNullOrWhiteSpace(q) ? _allStudents : _allStudents.Where(s => s.Id.Contains(q, StringComparison.OrdinalIgnoreCase) || s.Name.Contains(q, StringComparison.OrdinalIgnoreCase) || s.ClassLevel.Contains(q, StringComparison.OrdinalIgnoreCase) || s.Gender.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList(); Students = new ObservableCollection<Student>(filtered); }
     private void ClearForm() { SelectedStudent = null; Name = ""; AgeText = ""; Gender = ""; ClassLevel = ""; Arm = ""; Department = ""; DateOfBirth = ""; AdmissionNumber = ""; ParentName = ""; ParentPhone = ""; Address = ""; Email = ""; Status = "Active"; IsEditing = false; }
 }
