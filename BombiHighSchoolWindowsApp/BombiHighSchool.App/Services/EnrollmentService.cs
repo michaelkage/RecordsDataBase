@@ -13,7 +13,8 @@ public sealed class EnrollmentService
         return data.Subjects.Where(x => ids.Contains(x.Id)).OrderBy(x => x.Name).ToList();
     }
 
-    public async Task EnrollAsync(string studentId, string subjectId)
+    // Enrollment is an administrative action. Students can only view their enrollment.
+    public async Task AdminEnrollAsync(string studentId, string subjectId)
     {
         var data = await _data.LoadAsync();
         if (!data.Students.Any(x => x.Id == studentId) || !data.Subjects.Any(x => x.Id == subjectId)) throw new InvalidOperationException("Student or subject does not exist.");
@@ -22,9 +23,11 @@ public sealed class EnrollmentService
         await _data.SaveAsync(data);
     }
 
-    public async Task UnenrollAsync(string studentId, string subjectId)
+    public async Task AdminUnenrollAsync(string studentId, string subjectId)
     {
         var data = await _data.LoadAsync();
+        var subject = data.Subjects.FirstOrDefault(x => x.Id == subjectId);
+        if (subject?.IsCompulsory == true) throw new InvalidOperationException("Compulsory subjects cannot be removed.");
         data.Enrollments.RemoveAll(x => x.StudentId == studentId && x.SubjectId == subjectId);
         await _data.SaveAsync(data);
     }
