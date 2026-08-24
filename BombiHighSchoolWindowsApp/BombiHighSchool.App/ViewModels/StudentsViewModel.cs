@@ -11,7 +11,6 @@ public partial class StudentsViewModel : ObservableObject
     private readonly StudentService _studentService = new();
     private readonly LocalDataService _dataService = new();
     private List<Student> _allStudents = [];
-
     [ObservableProperty] private ObservableCollection<Student> students = [];
     [ObservableProperty] private string searchText = "";
     [ObservableProperty] private string name = "";
@@ -49,7 +48,7 @@ public partial class StudentsViewModel : ObservableObject
     private async Task LoadAsync()
     {
         IsBusy = true;
-        try { _allStudents = await _studentService.GetAllAsync(); ApplyFilter(); StatusMessage = $"{_allStudents.Count} student{(_allStudents.Count == 1 ? "" : "s")} stored locally."; }
+        try { _allStudents = await _studentService.GetAllAsync(); ApplyFilter(); StatusMessage = $"{_allStudents.Count} active student{(_allStudents.Count == 1 ? "" : "s")} stored locally."; }
         catch (Exception ex) { StatusMessage = $"Could not load students: {ex.Message}"; }
         finally { IsBusy = false; }
     }
@@ -75,7 +74,7 @@ public partial class StudentsViewModel : ObservableObject
             else
             {
                 student = await _studentService.AddAsync(Name, age, Gender, ClassLevel, Arm, Department);
-                StatusMessage = $"{student.Name} added as {student.Id}. Initial student password: Welcome123!";
+                StatusMessage = $"{student.Name} added as {student.Id}.";
             }
             var data = await _dataService.LoadAsync();
             var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
@@ -98,11 +97,12 @@ public partial class StudentsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task DeleteAsync(Student? student)
+    private async Task ArchiveAsync(Student? student)
     {
-        if (student is null) return; IsBusy = true;
-        try { await _studentService.DeleteAsync(student.Id); StatusMessage = $"{student.Name} deleted."; await ReloadWithoutBusyMessageAsync(); ClearForm(); }
-        catch (Exception ex) { StatusMessage = $"Could not delete student: {ex.Message}"; }
+        if (student is null) return;
+        IsBusy = true;
+        try { await _studentService.ArchiveAsync(student.Id); StatusMessage = $"{student.Name} archived. The record and account were preserved and the student account was disabled."; await ReloadWithoutBusyMessageAsync(); ClearForm(); }
+        catch (Exception ex) { StatusMessage = $"Could not archive student: {ex.Message}"; }
         finally { IsBusy = false; }
     }
 
