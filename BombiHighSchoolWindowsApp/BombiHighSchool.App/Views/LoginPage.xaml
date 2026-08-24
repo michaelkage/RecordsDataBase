@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page x:Class="BombiHighSchool.App.Views.LoginPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="#0F172A">
+    <Grid Padding="40">
+        <Border MaxWidth="760" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#172033" BorderBrush="#26334A" BorderThickness="1" CornerRadius="24" Padding="40">
+            <StackPanel Spacing="22">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Bombi High School" FontSize="34" FontWeight="SemiBold" Foreground="#F8FAFC" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Windows Records System" FontSize="14" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="Choose your portal" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Button Click="Student_Click" Padding="24" HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="6"><TextBlock Text="Student Portal" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="View your profile, subjects, scores and rankings." TextWrapping="Wrap" Foreground="#CBD5E1"/></StackPanel>
+                    </Button>
+                    <Button Grid.Column="1" Click="Admin_Click" Padding="24" HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="6"><TextBlock Text="Admin Portal" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="Manage students, subjects, scores and school records." TextWrapping="Wrap" Foreground="#CBD5E1"/></StackPanel>
+                    </Button>
+                </Grid>
+                <TextBlock Text="All data is stored locally on this Windows device." FontSize="12" Foreground="#64748B" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>
