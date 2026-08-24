@@ -22,6 +22,8 @@ public sealed partial class MainPage : Page
             case "Subjects": ContentFrame.Navigate(typeof(SubjectsPage)); break;
             case "Scores": ContentFrame.Navigate(typeof(ScoresPage)); break;
             case "Rankings": ContentFrame.Navigate(typeof(RankingsPage)); break;
+            case "Settings": ContentFrame.Navigate(typeof(SettingsPage)); break;
+            case "Logout": Frame?.Navigate(typeof(LoginPage)); break;
             default: ContentFrame.Navigate(typeof(DashboardPage)); break;
         }
     }
