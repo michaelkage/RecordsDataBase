@@ -1,14 +1,9 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using BombiHighSchool_App.ViewModels;
+using BombiHighSchool.App.ViewModels;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace BombiHighSchool.App;
 
-namespace BombiHighSchool_App;
-
-/// <summary>
-/// The main content page displayed inside the application window.
-/// </summary>
 public sealed partial class MainPage : Page
 {
     public MainPageViewModel ViewModel { get; } = new();
@@ -16,5 +11,26 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         InitializeComponent();
+        Loaded += MainPage_Loaded;
+    }
+
+    private async void MainPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        AppNavigation.SelectedItem = AppNavigation.MenuItems[0];
+        await ViewModel.LoadAsync();
+    }
+
+    private void Navigation_SelectionChanged(
+        NavigationView sender,
+        NavigationViewSelectionChangedEventArgs args)
+    {
+        if (args.SelectedItem is NavigationViewItem item && item.Tag is string section)
+        {
+            ViewModel.NavigateCommand.Execute(section);
+        }
+        else if (args.SelectedItemContainer is NavigationViewItem container && container.Tag is string footerSection)
+        {
+            ViewModel.NavigateCommand.Execute(footerSection);
+        }
     }
 }
