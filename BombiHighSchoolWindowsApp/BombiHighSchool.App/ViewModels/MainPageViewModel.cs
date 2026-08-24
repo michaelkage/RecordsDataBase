@@ -1,30 +1,52 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BombiHighSchool.App.Models;
+using BombiHighSchool.App.Services;
 
-namespace BombiHighSchool_App.ViewModels;
+namespace BombiHighSchool.App.ViewModels;
 
-/// <summary>
-/// Sample ViewModel using CommunityToolkit.Mvvm partial property syntax.
-/// Uses <see cref="ObservableProperty"/> for change notification and
-/// <see cref="RelayCommand"/> for command binding.
-/// </summary>
 public partial class MainPageViewModel : ObservableObject
 {
-    [ObservableProperty]
-    public partial string Greeting { get; set; } = "Hello, WinUI!";
+    private readonly LocalDataService _dataService = new();
 
     [ObservableProperty]
-    public partial int Counter { get; set; }
+    private string currentSection = "Dashboard";
 
-    [RelayCommand]
-    private void Increment()
+    [ObservableProperty]
+    private int studentCount;
+
+    [ObservableProperty]
+    private int subjectCount;
+
+    [ObservableProperty]
+    private string storageStatus = "Loading local database…";
+
+    [ObservableProperty]
+    private string databaseLocation = "";
+
+    public MainPageViewModel()
     {
-        Counter++;
+        DatabaseLocation = _dataService.DatabasePath;
     }
 
     [RelayCommand]
-    private void Decrement()
+    private void Navigate(string section)
     {
-        Counter--;
+        CurrentSection = section;
+    }
+
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        await LoadAsync();
+    }
+
+    public async Task LoadAsync()
+    {
+        var data = await _dataService.LoadAsync();
+
+        StudentCount = data.Students.Count;
+        SubjectCount = 0;
+        StorageStatus = "Local database ready";
     }
 }
