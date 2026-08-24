@@ -11,4 +11,9 @@ public sealed partial class AdminAcademicPage : Page
         InitializeComponent();
         Loaded += async (_, _) => await ViewModel.LoadAsync();
     }
+
+    private void ResetPassword_Changed(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        if (sender is PasswordBox box) ViewModel.ResetPasswordText = box.Password;
+    }
 }
