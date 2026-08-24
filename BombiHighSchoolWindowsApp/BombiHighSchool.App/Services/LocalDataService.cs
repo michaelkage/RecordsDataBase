@@ -22,9 +22,11 @@ public sealed class LocalDataService
 
     public string DatabasePath => _databasePath;
     public string BackupPath => _backupPath;
+    public string? LastLoadWarning { get; private set; }
 
     public async Task<SchoolData> LoadAsync()
     {
+        LastLoadWarning = null;
         await FileLock.WaitAsync();
         try { return await LoadUnlockedAsync(); }
         finally { FileLock.Release(); }
@@ -55,6 +57,7 @@ public sealed class LocalDataService
                     {
                         var corruptCopy = _databasePath + ".corrupt-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".json";
                         try { File.Copy(_databasePath, corruptCopy, true); } catch { }
+                        LastLoadWarning = "The active database was damaged. Bombi High School recovered the latest backup and preserved the damaged file. Review Settings → Database management.";
                         return recovered;
                     }
                 }
