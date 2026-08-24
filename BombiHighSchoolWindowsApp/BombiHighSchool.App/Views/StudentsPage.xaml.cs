@@ -18,4 +18,14 @@ public sealed partial class StudentsPage : Page
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
+
+    public void FocusSearch(string query)
+    {
+        ViewModel.SearchText = query;
+    }
+
+    public void StartNewStudent()
+    {
+        ViewModel.CancelEditCommand.Execute(null);
+    }
 }
