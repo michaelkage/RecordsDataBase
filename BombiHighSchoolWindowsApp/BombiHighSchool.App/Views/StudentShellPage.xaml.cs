@@ -19,15 +19,15 @@ public sealed partial class StudentShellPage : Page
             Frame?.Navigate(typeof(LoginPage));
             return;
         }
-
+        StudentIdText.Text = SessionService.StudentId ?? "";
+        WelcomeText.Text = $"Welcome back, {SessionService.Username ?? "Student"}";
         StudentNavigation.SelectedItem = StudentNavigation.MenuItems[0];
         NavigateTo("Overview");
     }
 
     private void Navigation_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (args.SelectedItem is NavigationViewItem item && item.Tag is string section)
-            NavigateTo(section);
+        if (args.SelectedItem is NavigationViewItem item && item.Tag is string section) NavigateTo(section);
     }
 
     private void NavigateTo(string section)
@@ -40,12 +40,29 @@ public sealed partial class StudentShellPage : Page
             case "Subjects": ContentFrame.Navigate(typeof(StudentSubjectsPage)); break;
             case "Results": ContentFrame.Navigate(typeof(StudentResultsPage)); break;
             case "Transcript": ContentFrame.Navigate(typeof(StudentTranscriptPage)); break;
-            case "Logout": SessionService.Clear(); Frame?.Navigate(typeof(LoginPage)); break;
+            case "Logout": SignOut_Click(this, new RoutedEventArgs()); return;
         }
-        if (ContentFrame.Content is StudentPortalPage overview) _ = overview.LoadStudentAsync(SessionService.StudentId!);
-        else if (ContentFrame.Content is StudentProfilePage profile) _ = profile.LoadStudentAsync(SessionService.StudentId!);
-        else if (ContentFrame.Content is StudentSubjectsPage subjects) _ = subjects.LoadStudentAsync(SessionService.StudentId!);
-        else if (ContentFrame.Content is StudentResultsPage results) _ = results.LoadStudentAsync(SessionService.StudentId!);
-        else if (ContentFrame.Content is StudentTranscriptPage transcript) _ = transcript.LoadStudentAsync(SessionService.StudentId!);
+        _ = LoadCurrentPageAsync();
+    }
+
+    private async Task LoadCurrentPageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SessionService.StudentId)) return;
+        switch (ContentFrame.Content)
+        {
+            case StudentPortalPage overview: await overview.LoadStudentAsync(SessionService.StudentId); break;
+            case StudentProfilePage profile: await profile.LoadStudentAsync(SessionService.StudentId); break;
+            case StudentSubjectsPage subjects: await subjects.LoadStudentAsync(SessionService.StudentId); break;
+            case StudentResultsPage results: await results.LoadStudentAsync(SessionService.StudentId); break;
+            case StudentTranscriptPage transcript: await transcript.LoadStudentAsync(SessionService.StudentId); break;
+        }
+    }
+
+    private async void Refresh_Click(object sender, RoutedEventArgs e) => await LoadCurrentPageAsync();
+
+    private void SignOut_Click(object sender, RoutedEventArgs e)
+    {
+        SessionService.Clear();
+        Frame?.Navigate(typeof(LoginPage));
     }
 }
