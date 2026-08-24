@@ -48,7 +48,13 @@ public partial class StudentsViewModel : ObservableObject
     private async Task LoadAsync()
     {
         IsBusy = true;
-        try { _allStudents = await _studentService.GetAllAsync(); ApplyFilter(); StatusMessage = $"{_allStudents.Count} active student{(_allStudents.Count == 1 ? "" : "s")} stored locally."; }
+        try
+        {
+            _allStudents = await _studentService.GetAllAsync();
+            ApplyFilter();
+            StatusMessage = _dataService.LastLoadWarning ?? $"{_allStudents.Count} active student{(_allStudents.Count == 1 ? "" : "s")} stored locally.";
+        }
+        catch (DatabaseUnavailableException ex) { StatusMessage = ex.Message; }
         catch (Exception ex) { StatusMessage = $"Could not load students: {ex.Message}"; }
         finally { IsBusy = false; }
     }
@@ -66,22 +72,17 @@ public partial class StudentsViewModel : ObservableObject
             Student student;
             if (IsEditing && SelectedStudent is not null)
             {
-                student = SelectedStudent;
-                student.Name = Name.Trim(); student.Age = age; student.Gender = Gender.Trim(); student.ClassLevel = ClassLevel.Trim();
-                await _studentService.UpdateAsync(student);
-                StatusMessage = $"{student.Name} updated successfully.";
+                student = SelectedStudent; student.Name = Name.Trim(); student.Age = age; student.Gender = Gender.Trim(); student.ClassLevel = ClassLevel.Trim();
+                await _studentService.UpdateAsync(student); StatusMessage = $"{student.Name} updated successfully.";
             }
-            else
-            {
-                student = await _studentService.AddAsync(Name, age, Gender, ClassLevel, Arm, Department);
-                StatusMessage = $"{student.Name} added as {student.Id}.";
-            }
+            else { student = await _studentService.AddAsync(Name, age, Gender, ClassLevel, Arm, Department); StatusMessage = $"{student.Name} added as {student.Id}."; }
             var data = await _dataService.LoadAsync();
             var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
             if (details is null) { details = new StudentDetails { StudentId = student.Id }; data.StudentDetails.Add(details); }
             details.Arm = Arm.Trim(); details.Department = Department.Trim(); details.DateOfBirth = DateOfBirth.Trim(); details.AdmissionNumber = AdmissionNumber.Trim(); details.ParentName = ParentName.Trim(); details.ParentPhone = ParentPhone.Trim(); details.Address = Address.Trim(); details.Email = Email.Trim(); details.Status = Status;
             await _dataService.SaveAsync(data); await ReloadWithoutBusyMessageAsync(); ClearForm();
         }
+        catch (DatabaseUnavailableException ex) { StatusMessage = ex.Message; }
         catch (Exception ex) { StatusMessage = $"Could not save student: {ex.Message}"; }
         finally { IsBusy = false; }
     }
@@ -90,18 +91,21 @@ public partial class StudentsViewModel : ObservableObject
     private async Task EditAsync(Student? student)
     {
         if (student is null) return;
-        SelectedStudent = student; Name = student.Name; AgeText = student.Age.ToString(); Gender = student.Gender; ClassLevel = student.ClassLevel;
-        var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
-        Arm = details?.Arm ?? ""; Department = details?.Department ?? ""; DateOfBirth = details?.DateOfBirth ?? ""; AdmissionNumber = details?.AdmissionNumber ?? ""; ParentName = details?.ParentName ?? ""; ParentPhone = details?.ParentPhone ?? ""; Address = details?.Address ?? ""; Email = details?.Email ?? ""; Status = details?.Status ?? "Active";
-        IsEditing = true; StatusMessage = $"Editing {student.Id}.";
+        try
+        {
+            SelectedStudent = student; Name = student.Name; AgeText = student.Age.ToString(); Gender = student.Gender; ClassLevel = student.ClassLevel;
+            var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
+            Arm = details?.Arm ?? ""; Department = details?.Department ?? ""; DateOfBirth = details?.DateOfBirth ?? ""; AdmissionNumber = details?.AdmissionNumber ?? ""; ParentName = details?.ParentName ?? ""; ParentPhone = details?.ParentPhone ?? ""; Address = details?.Address ?? ""; Email = details?.Email ?? ""; Status = details?.Status ?? "Active";
+            IsEditing = true; StatusMessage = $"Editing {student.Id}.";
+        }
+        catch (Exception ex) { StatusMessage = $"Could not load student: {ex.Message}"; }
     }
 
     [RelayCommand]
     private async Task ArchiveAsync(Student? student)
     {
-        if (student is null) return;
-        IsBusy = true;
-        try { await _studentService.ArchiveAsync(student.Id); StatusMessage = $"{student.Name} archived. The record and account were preserved and the student account was disabled."; await ReloadWithoutBusyMessageAsync(); ClearForm(); }
+        if (student is null) return; IsBusy = true;
+        try { await _studentService.ArchiveAsync(student.Id); StatusMessage = $"{student.Name} archived. The record was preserved and the account disabled."; await ReloadWithoutBusyMessageAsync(); ClearForm(); }
         catch (Exception ex) { StatusMessage = $"Could not archive student: {ex.Message}"; }
         finally { IsBusy = false; }
     }
