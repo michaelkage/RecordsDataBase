@@ -32,6 +32,20 @@ public sealed class LocalDataService
         finally { FileLock.Release(); }
     }
 
+    public async Task UpdateAsync(Func<SchoolData, Task> mutation)
+    {
+        ArgumentNullException.ThrowIfNull(mutation);
+        await FileLock.WaitAsync();
+        try
+        {
+            LastLoadWarning = null;
+            var data = await LoadUnlockedAsync();
+            await mutation(data);
+            await SaveUnlockedAsync(data, true);
+        }
+        finally { FileLock.Release(); }
+    }
+
     private async Task<SchoolData> LoadUnlockedAsync()
     {
         if (!File.Exists(_databasePath))
