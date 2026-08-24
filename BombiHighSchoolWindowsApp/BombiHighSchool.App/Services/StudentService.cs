@@ -22,19 +22,9 @@ public sealed class StudentService
     public async Task<Student> AddAsync(string name, int age, string gender, string classLevel, string arm, string department)
     {
         var data = await _dataService.LoadAsync();
-
-        var student = new Student
-        {
-            Id = GenerateNextId(data.Students),
-            Name = name.Trim(),
-            Age = age,
-            Gender = gender.Trim(),
-            ClassLevel = classLevel.Trim(),
-            Arm = arm.Trim(),
-            Department = department.Trim()
-        };
-
+        var student = new Student { Id = GenerateNextId(data.Students), Name = name.Trim(), Age = age, Gender = gender.Trim(), ClassLevel = classLevel.Trim() };
         data.Students.Add(student);
+        data.StudentDetails.Add(new StudentDetails { StudentId = student.Id, Arm = arm.Trim(), Department = department.Trim(), Status = "Active" });
         await _dataService.SaveAsync(data);
         await _authenticationService.EnsureStudentAccountAsync(student.Id, "Welcome123!");
         return student;
@@ -44,24 +34,8 @@ public sealed class StudentService
     {
         var data = await _dataService.LoadAsync();
         var existing = data.Students.FirstOrDefault(s => s.Id == student.Id);
-
-        if (existing is null)
-            throw new InvalidOperationException("The student could not be found.");
-
-        existing.Name = student.Name.Trim();
-        existing.Age = student.Age;
-        existing.Gender = student.Gender.Trim();
-        existing.ClassLevel = student.ClassLevel.Trim();
-        existing.Arm = student.Arm.Trim();
-        existing.Department = student.Department.Trim();
-        existing.DateOfBirth = student.DateOfBirth.Trim();
-        existing.AdmissionNumber = student.AdmissionNumber.Trim();
-        existing.ParentName = student.ParentName.Trim();
-        existing.ParentPhone = student.ParentPhone.Trim();
-        existing.Address = student.Address.Trim();
-        existing.Email = student.Email.Trim();
-        existing.Status = student.Status.Trim();
-
+        if (existing is null) throw new InvalidOperationException("The student could not be found.");
+        existing.Name = student.Name.Trim(); existing.Age = student.Age; existing.Gender = student.Gender.Trim(); existing.ClassLevel = student.ClassLevel.Trim();
         await _dataService.SaveAsync(data);
     }
 
@@ -69,10 +43,7 @@ public sealed class StudentService
     {
         var data = await _dataService.LoadAsync();
         var student = data.Students.FirstOrDefault(s => s.Id == id);
-
-        if (student is null)
-            return;
-
+        if (student is null) return;
         data.Students.Remove(student);
         data.StudentDetails.RemoveAll(d => d.StudentId == id);
         data.Scores.RemoveAll(s => s.StudentId == id);
@@ -82,14 +53,7 @@ public sealed class StudentService
 
     private static string GenerateNextId(IEnumerable<Student> students)
     {
-        var nextNumber = students
-            .Select(s => s.Id)
-            .Where(id => id.StartsWith("BHS", StringComparison.OrdinalIgnoreCase))
-            .Select(id => id[3..])
-            .Select(value => int.TryParse(value, out var number) ? number : 0)
-            .DefaultIfEmpty(0)
-            .Max() + 1;
-
+        var nextNumber = students.Select(s => s.Id).Where(id => id.StartsWith("BHS", StringComparison.OrdinalIgnoreCase)).Select(id => id[3..]).Select(value => int.TryParse(value, out var number) ? number : 0).DefaultIfEmpty(0).Max() + 1;
         return $"BHS{nextNumber:000000}";
     }
 }
