@@ -25,7 +25,6 @@ public sealed partial class StudentLoginPage : Page
     private void LoginSucceeded(object? sender, EventArgs e)
     {
         SessionService.StartStudent(ViewModel.StudentId.Trim());
-        Frame?.Navigate(typeof(StudentPortalPage));
-        if (Frame?.Content is StudentPortalPage page) _ = page.LoadStudentAsync(ViewModel.StudentId.Trim());
+        Frame?.Navigate(typeof(StudentShellPage));
     }
 }
