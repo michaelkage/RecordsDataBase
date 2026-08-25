@@ -11,7 +11,7 @@ public sealed class StudentService
     public async Task<List<Student>> GetAllAsync(bool includeArchived = false)
     {
         var data = await _dataService.LoadAsync();
-        return data.Students.Where(s => includeArchived || !IsArchived(data, s.Id)).ToList();
+        return data.Students.Where(s => includeArchived || (!s.IsArchived && !IsArchived(data, s.Id))).ToList();
     }
 
     public async Task<Student> AddAsync(string name, string gender, string classLevel, string arm, string department)
@@ -19,39 +19,65 @@ public sealed class StudentService
         Student student = new();
         await _dataService.UpdateAsync(data =>
         {
-            student = new Student { Id = GenerateNextId(data.Students), Name = name.Trim(), Age = 0, Gender = gender.Trim(), ClassLevel = classLevel.Trim() };
+            student = new Student { Id = GenerateNextId(data.Students), Name = name.Trim(), Age = 0, Gender = gender.Trim(), ClassLevel = classLevel.Trim(), IsArchived = false };
             data.Students.Add(student);
-            data.StudentDetails.Add(new StudentDetails
-            {
-                StudentId = student.Id,
-                Arm = arm.Trim(),
-                Department = department.Trim(),
-                AdmissionNumber = GenerateNextAdmissionNumber(data.StudentDetails),
-                Status = "Active"
-            });
+            data.StudentDetails.Add(new StudentDetails { StudentId = student.Id, Arm = arm.Trim(), Department = department.Trim(), AdmissionNumber = GenerateNextAdmissionNumber(data.StudentDetails), Status = "Active" });
             return Task.CompletedTask;
         });
         await _authenticationService.EnsureStudentAccountAsync(student.Id, "Welcome123!");
         return student;
     }
 
-    public async Task UpdateAsync(Student student)
+    public async Task UpdateProfileAsync(Student student, StudentDetails details)
     {
         await _dataService.UpdateAsync(data =>
         {
             var existing = data.Students.FirstOrDefault(s => s.Id == student.Id) ?? throw new InvalidOperationException("The student could not be found.");
-            existing.Name = student.Name.Trim(); existing.Age = student.Age; existing.Gender = student.Gender.Trim(); existing.ClassLevel = student.ClassLevel.Trim();
+            existing.Name = student.Name.Trim();
+            existing.Age = student.Age;
+            existing.Gender = student.Gender.Trim();
+            existing.ClassLevel = student.ClassLevel.Trim();
+            existing.IsArchived = false;
+
+            var existingDetails = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
+            if (existingDetails is null)
+            {
+                details.StudentId = student.Id;
+                data.StudentDetails.Add(details);
+            }
+            else
+            {
+                existingDetails.Arm = details.Arm.Trim();
+                existingDetails.Department = details.Department.Trim();
+                existingDetails.DateOfBirth = details.DateOfBirth.Trim();
+                if (!string.IsNullOrWhiteSpace(details.AdmissionNumber)) existingDetails.AdmissionNumber = details.AdmissionNumber.Trim();
+                existingDetails.ParentName = details.ParentName.Trim();
+                existingDetails.ParentPhone = details.ParentPhone.Trim();
+                existingDetails.Address = details.Address.Trim();
+                existingDetails.Email = details.Email.Trim();
+                existingDetails.Status = string.IsNullOrWhiteSpace(details.Status) ? "Active" : details.Status.Trim();
+            }
             return Task.CompletedTask;
         });
+    }
+
+    public async Task UpdateAsync(Student student)
+    {
+        var data = await _dataService.LoadAsync();
+        var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id) ?? new StudentDetails { StudentId = student.Id };
+        await UpdateProfileAsync(student, details);
     }
 
     public async Task ArchiveAsync(string id)
     {
         await _dataService.UpdateAsync(data =>
         {
-            _ = data.Students.FirstOrDefault(s => s.Id == id) ?? throw new InvalidOperationException("The student could not be found.");
-            var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == id); if (details is not null) details.Status = "Archived";
-            var account = data.Users.FirstOrDefault(u => u.StudentId == id && u.Role.Equals("Student", StringComparison.OrdinalIgnoreCase)); if (account is not null) account.IsEnabled = false;
+            var student = data.Students.FirstOrDefault(s => s.Id == id) ?? throw new InvalidOperationException("The student could not be found.");
+            student.IsArchived = true;
+            var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == id);
+            if (details is not null) details.Status = "Archived";
+            var account = data.Users.FirstOrDefault(u => u.StudentId == id && u.Role.Equals("Student", StringComparison.OrdinalIgnoreCase));
+            if (account is not null) account.IsEnabled = false;
             return Task.CompletedTask;
         });
     }
@@ -60,9 +86,12 @@ public sealed class StudentService
     {
         await _dataService.UpdateAsync(data =>
         {
-            _ = data.Students.FirstOrDefault(s => s.Id == id) ?? throw new InvalidOperationException("The student could not be found.");
-            var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == id); if (details is not null) details.Status = "Active";
-            var account = data.Users.FirstOrDefault(u => u.StudentId == id && u.Role.Equals("Student", StringComparison.OrdinalIgnoreCase)); if (account is not null) account.IsEnabled = true;
+            var student = data.Students.FirstOrDefault(s => s.Id == id) ?? throw new InvalidOperationException("The student could not be found.");
+            student.IsArchived = false;
+            var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == id);
+            if (details is not null) details.Status = "Active";
+            var account = data.Users.FirstOrDefault(u => u.StudentId == id && u.Role.Equals("Student", StringComparison.OrdinalIgnoreCase));
+            if (account is not null) account.IsEnabled = true;
             return Task.CompletedTask;
         });
     }
