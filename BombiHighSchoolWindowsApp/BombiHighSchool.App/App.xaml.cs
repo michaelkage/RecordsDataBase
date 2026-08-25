@@ -1,16 +1,24 @@
-using Microsoft.UI.Xaml;
-
-namespace BombiHighSchool.App;
+using Microsoft.Extensions.DependencyInjection;
 
 public partial class App : Application
 {
-    public static MainWindow? MainWindow { get; private set; }
+    public IServiceProvider Services { get; }
 
-    public App() { InitializeComponent(); }
-
-    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    public App()
     {
-        MainWindow = new MainWindow();
-        MainWindow.Activate();
+        var services = new ServiceCollection();
+        ConfigureServices(services);
+        Services = services.BuildServiceProvider();
+    }
+
+    private void ConfigureServices(IServiceCollection services)
+    {
+        // Register Services
+        services.AddSingleton<ILocalDataService, LocalDataService>();
+        services.AddScoped<IReportingService, ReportingService>();
+        services.AddScoped<AuthenticationService>();
+        
+        // Register ViewModels
+        services.AddTransient<AdminAcademicViewModel>();
     }
 }
