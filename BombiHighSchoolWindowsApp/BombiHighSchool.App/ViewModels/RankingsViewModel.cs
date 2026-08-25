@@ -10,6 +10,7 @@ public partial class RankingsViewModel : ObservableObject
 {
     private readonly RankingService _service = new();
     private readonly LocalDataService _dataService = new();
+    private bool _periodLoaded;
     [ObservableProperty] private ObservableCollection<StudentRanking> rankings = [];
     [ObservableProperty] private string classFilter = "All classes";
     [ObservableProperty] private string armFilter = "All arms";
@@ -22,9 +23,13 @@ public partial class RankingsViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadAsync()
     {
-        var data = await _dataService.LoadAsync();
-        Session = data.CurrentAcademicPeriod.Session;
-        Term = data.CurrentAcademicPeriod.Term;
+        if (!_periodLoaded)
+        {
+            var data = await _dataService.LoadAsync();
+            Session = data.CurrentAcademicPeriod.Session;
+            Term = data.CurrentAcademicPeriod.Term;
+            _periodLoaded = true;
+        }
         var classFilter = ClassFilter == "All classes" ? null : ClassFilter;
         var armFilter = ArmFilter == "All arms" ? null : ArmFilter;
         Rankings = new(await _service.GetStudentRankingsAsync(classFilter, armFilter, Session, Term));
