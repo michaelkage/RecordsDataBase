@@ -6,12 +6,18 @@ public sealed class StudentService
 {
     private readonly LocalDataService _dataService;
     private readonly AuthenticationService _authenticationService;
-    public StudentService(LocalDataService? dataService = null) { _dataService = dataService ?? new LocalDataService(); _authenticationService = new AuthenticationService(_dataService); }
+
+    public StudentService(LocalDataService? dataService = null, AuthenticationService? authenticationService = null)
+    {
+        _dataService = dataService ?? new LocalDataService();
+        _authenticationService = authenticationService ?? new AuthenticationService(_dataService);
+    }
 
     public async Task<List<Student>> GetAllAsync(bool includeArchived = false)
     {
         var data = await _dataService.LoadAsync();
-        return data.Students.Where(s => includeArchived || (!s.IsArchived && !IsArchived(data, s.Id))).ToList();
+        // Student.IsArchived is the single authoritative lifecycle flag.
+        return data.Students.Where(s => includeArchived || !s.IsArchived).ToList();
     }
 
     public async Task<Student> AddAsync(string name, string gender, string classLevel, string arm, string department)
@@ -19,12 +25,45 @@ public sealed class StudentService
         Student student = new();
         await _dataService.UpdateAsync(data =>
         {
-            student = new Student { Id = GenerateNextId(data.Students), Name = name.Trim(), Age = 0, Gender = gender.Trim(), ClassLevel = classLevel.Trim(), IsArchived = false };
+            var studentNumber = AllocateNextStudentNumber(data);
+            var admissionNumber = AllocateNextAdmissionNumber(data);
+            student = new Student
+            {
+                Id = $"BHS{studentNumber:000000}",
+                Name = name.Trim(),
+                Age = 0,
+                Gender = gender.Trim(),
+                ClassLevel = classLevel.Trim(),
+                IsArchived = false
+            };
             data.Students.Add(student);
-            data.StudentDetails.Add(new StudentDetails { StudentId = student.Id, Arm = arm.Trim(), Department = department.Trim(), AdmissionNumber = GenerateNextAdmissionNumber(data.StudentDetails), Status = "Active" });
+            data.StudentDetails.Add(new StudentDetails
+            {
+                StudentId = student.Id,
+                Arm = arm.Trim(),
+                Department = department.Trim(),
+                AdmissionNumber = $"ADM{admissionNumber:000000}",
+                Status = "Active"
+            });
             return Task.CompletedTask;
         });
-        await _authenticationService.EnsureStudentAccountAsync(student.Id, "Welcome123!");
+
+        try
+        {
+            await _authenticationService.EnsureStudentAccountAsync(student.Id, "Welcome123!");
+        }
+        catch
+        {
+            // Roll back the student if its required account could not be created.
+            await _dataService.UpdateAsync(data =>
+            {
+                data.Students.RemoveAll(s => s.Id == student.Id);
+                data.StudentDetails.RemoveAll(d => d.StudentId == student.Id);
+                return Task.CompletedTask;
+            });
+            throw;
+        }
+
         return student;
     }
 
@@ -32,17 +71,20 @@ public sealed class StudentService
     {
         await _dataService.UpdateAsync(data =>
         {
-            var existing = data.Students.FirstOrDefault(s => s.Id == student.Id) ?? throw new InvalidOperationException("The student could not be found.");
+            var existing = data.Students.FirstOrDefault(s => s.Id == student.Id)
+                ?? throw new InvalidOperationException("The student could not be found.");
+
             existing.Name = student.Name.Trim();
             existing.Age = student.Age;
             existing.Gender = student.Gender.Trim();
             existing.ClassLevel = student.ClassLevel.Trim();
-            existing.IsArchived = false;
+            // Editing profile data MUST NOT change lifecycle state.
 
             var existingDetails = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
             if (existingDetails is null)
             {
                 details.StudentId = student.Id;
+                details.Status = existing.IsArchived ? "Archived" : "Active";
                 data.StudentDetails.Add(details);
             }
             else
@@ -50,12 +92,12 @@ public sealed class StudentService
                 existingDetails.Arm = details.Arm.Trim();
                 existingDetails.Department = details.Department.Trim();
                 existingDetails.DateOfBirth = details.DateOfBirth.Trim();
-                if (!string.IsNullOrWhiteSpace(details.AdmissionNumber)) existingDetails.AdmissionNumber = details.AdmissionNumber.Trim();
+                // Admission numbers are generated identifiers and may only be retained, never changed by editing.
                 existingDetails.ParentName = details.ParentName.Trim();
                 existingDetails.ParentPhone = details.ParentPhone.Trim();
                 existingDetails.Address = details.Address.Trim();
                 existingDetails.Email = details.Email.Trim();
-                existingDetails.Status = string.IsNullOrWhiteSpace(details.Status) ? "Active" : details.Status.Trim();
+                existingDetails.Status = existing.IsArchived ? "Archived" : (string.IsNullOrWhiteSpace(details.Status) ? "Active" : details.Status.Trim());
             }
             return Task.CompletedTask;
         });
@@ -98,7 +140,25 @@ public sealed class StudentService
 
     public Task ResetStudentPasswordAsync(string id, string newPassword) => _authenticationService.SetStudentPasswordAsync(id, newPassword);
     public Task SetStudentAccountEnabledAsync(string id, bool enabled) => _authenticationService.SetStudentEnabledAsync(id, enabled);
-    private static bool IsArchived(SchoolData data, string id) => data.StudentDetails.FirstOrDefault(d => d.StudentId == id)?.Status.Equals("Archived", StringComparison.OrdinalIgnoreCase) == true;
-    private static string GenerateNextId(IEnumerable<Student> students) { var next = students.Select(s => s.Id).Where(id => id.StartsWith("BHS", StringComparison.OrdinalIgnoreCase)).Select(id => id[3..]).Select(v => int.TryParse(v, out var n) ? n : 0).DefaultIfEmpty(0).Max() + 1; return $"BHS{next:000000}"; }
-    private static string GenerateNextAdmissionNumber(IEnumerable<StudentDetails> details) { var next = details.Select(d => d.AdmissionNumber).Where(v => v.StartsWith("ADM", StringComparison.OrdinalIgnoreCase)).Select(v => v[3..]).Select(v => int.TryParse(v, out var n) ? n : 0).DefaultIfEmpty(0).Max() + 1; return $"ADM{next:000000}"; }
+
+    private static int AllocateNextStudentNumber(SchoolData data)
+    {
+        if (data.NextStudentNumber <= 0)
+            data.NextStudentNumber = MaxNumber(data.Students.Select(s => s.Id), "BHS");
+        return ++data.NextStudentNumber;
+    }
+
+    private static int AllocateNextAdmissionNumber(SchoolData data)
+    {
+        if (data.NextAdmissionNumber <= 0)
+            data.NextAdmissionNumber = MaxNumber(data.StudentDetails.Select(d => d.AdmissionNumber), "ADM");
+        return ++data.NextAdmissionNumber;
+    }
+
+    private static int MaxNumber(IEnumerable<string> values, string prefix) => values
+        .Where(v => v.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        .Select(v => v[prefix.Length..])
+        .Select(v => int.TryParse(v, out var n) ? n : 0)
+        .DefaultIfEmpty(0)
+        .Max();
 }
