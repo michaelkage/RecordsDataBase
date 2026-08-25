@@ -1,0 +1,91 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Bombi: Clean",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["clean", "BombiHighSchool.App.csproj"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "Bombi: Build",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "BombiHighSchool.App.csproj"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": false
+      }
+    },
+    {
+      "label": "Bombi: Clean + Build",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Bombi: Clean", "Bombi: Build"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Bombi: Run",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "BombiHighSchool.App.csproj", "--no-build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true,
+        "clear": false
+      }
+    },
+    {
+      "label": "Bombi: Build + Run",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Bombi: Build", "Bombi: Run"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      }
+    },
+    {
+      "label": "Bombi: Publish x64",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["publish", "BombiHighSchool.App.csproj", "-c", "Release", "-r", "win-x64", "--self-contained", "true"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    }
+  ]
+}
