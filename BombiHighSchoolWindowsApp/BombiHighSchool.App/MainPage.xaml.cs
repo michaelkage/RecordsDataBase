@@ -43,7 +43,7 @@ public sealed partial class MainPage : Page
 
     private void GlobalSearch_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        var query = args.Query?.Trim();
+        var query = sender.Text?.Trim();
         if (string.IsNullOrWhiteSpace(query)) return;
         ContentFrame.Navigate(typeof(StudentsPage));
         if (ContentFrame.Content is StudentsPage page) page.FocusSearch(query);
