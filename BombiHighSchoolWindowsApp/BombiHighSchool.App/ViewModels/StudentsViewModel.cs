@@ -37,7 +37,7 @@ public partial class StudentsViewModel : ObservableObject
     public Visibility OptionalDetailsVisibility => IsEditing ? Visibility.Visible : Visibility.Collapsed;
     public string[] Genders { get; } = ["Male", "Female", "Other"];
     public string[] ClassLevels { get; } = ["JSS1", "JSS2", "JSS3", "SS1", "SS2", "SS3"];
-    public string[] Arms { get; } = ["Gold", "Emerald", "Jade", "Silver", "Topaz", "Platinum", "White", "Crimson", "Diamond"];
+    public string[] Arms => SchoolRules.Arms;
     public string[] Departments { get; } = ["Science", "Arts", "Commercial", "General"];
     public string[] Statuses { get; } = ["Active", "Inactive", "Graduated", "Transferred"];
     public bool IsSeniorClass => ClassLevel.StartsWith("SS", StringComparison.OrdinalIgnoreCase);
@@ -69,22 +69,37 @@ public partial class StudentsViewModel : ObservableObject
             Student student;
             if (IsEditing && SelectedStudent is not null)
             {
-                student = SelectedStudent; student.Name = Name.Trim();
+                student = SelectedStudent;
+                student.Name = Name.Trim();
                 if (int.TryParse(AgeText, out var age)) student.Age = age;
-                student.Gender = Gender.Trim(); student.ClassLevel = ClassLevel.Trim();
-                await _studentService.UpdateAsync(student); StatusMessage = $"{student.Name} updated successfully.";
-                var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
-                if (details is null) { details = new StudentDetails { StudentId = student.Id }; data.StudentDetails.Add(details); }
-                details.Arm = Arm.Trim(); details.Department = Department.Trim(); details.DateOfBirth = DateOfBirth.Trim(); details.ParentName = ParentName.Trim(); details.ParentPhone = ParentPhone.Trim(); details.Address = Address.Trim(); details.Email = Email.Trim(); details.Status = Status;
+                student.Gender = Gender.Trim();
+                student.ClassLevel = ClassLevel.Trim();
+                await _studentService.UpdateAsync(student);
+
+                var data = await _dataService.LoadAsync();
+                var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id) ?? new StudentDetails { StudentId = student.Id };
+                if (!data.StudentDetails.Contains(details)) data.StudentDetails.Add(details);
+                // Optional fields are only changed when the administrator actually supplied a value.
+                if (!string.IsNullOrWhiteSpace(Arm)) details.Arm = Arm.Trim();
+                if (!string.IsNullOrWhiteSpace(Department)) details.Department = Department.Trim();
+                if (!string.IsNullOrWhiteSpace(DateOfBirth)) details.DateOfBirth = DateOfBirth.Trim();
+                if (!string.IsNullOrWhiteSpace(ParentName)) details.ParentName = ParentName.Trim();
+                if (!string.IsNullOrWhiteSpace(ParentPhone)) details.ParentPhone = ParentPhone.Trim();
+                if (!string.IsNullOrWhiteSpace(Address)) details.Address = Address.Trim();
+                if (!string.IsNullOrWhiteSpace(Email)) details.Email = Email.Trim();
+                if (!string.IsNullOrWhiteSpace(Status)) details.Status = Status.Trim();
                 await _dataService.SaveAsync(data);
+                StatusMessage = $"{student.Name} updated successfully.";
             }
             else
             {
                 student = await _studentService.AddAsync(Name, Gender, ClassLevel, Arm, Department);
-                var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
+                var data = await _dataService.LoadAsync();
+                var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
                 StatusMessage = $"{student.Name} registered as {student.Id}. Admission number {details?.AdmissionNumber ?? "assigned"}.";
             }
-            await ReloadWithoutBusyMessageAsync(); ClearForm();
+            await ReloadWithoutBusyMessageAsync();
+            ClearForm();
         }
         catch (DatabaseUnavailableException ex) { StatusMessage = ex.Message; }
         catch (Exception ex) { StatusMessage = $"Could not save student: {ex.Message}"; }
