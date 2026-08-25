@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.UI.Xaml;
 using BombiHighSchool.App.Models;
 using BombiHighSchool.App.Services;
 
@@ -34,7 +33,7 @@ public partial class StudentsViewModel : ObservableObject
 
     public string FormTitle => IsEditing ? "Edit student" : "Register student";
     public string SaveButtonText => IsEditing ? "Save changes" : "Register student";
-    public Visibility OptionalDetailsVisibility => IsEditing ? Visibility.Visible : Visibility.Collapsed;
+    public System.Windows.Visibility OptionalDetailsVisibility => IsEditing ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
     public string[] Genders { get; } = ["Male", "Female", "Other"];
     public string[] ClassLevels { get; } = ["JSS1", "JSS2", "JSS3", "SS1", "SS2", "SS3"];
     public string[] Arms => SchoolRules.Arms;
@@ -66,34 +65,16 @@ public partial class StudentsViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            Student student;
             if (IsEditing && SelectedStudent is not null)
             {
-                student = SelectedStudent;
-                student.Name = Name.Trim();
-                if (int.TryParse(AgeText, out var age)) student.Age = age;
-                student.Gender = Gender.Trim();
-                student.ClassLevel = ClassLevel.Trim();
-                await _studentService.UpdateAsync(student);
-
-                var data = await _dataService.LoadAsync();
-                var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id) ?? new StudentDetails { StudentId = student.Id };
-                if (!data.StudentDetails.Contains(details)) data.StudentDetails.Add(details);
-                // Optional fields are only changed when the administrator actually supplied a value.
-                if (!string.IsNullOrWhiteSpace(Arm)) details.Arm = Arm.Trim();
-                if (!string.IsNullOrWhiteSpace(Department)) details.Department = Department.Trim();
-                if (!string.IsNullOrWhiteSpace(DateOfBirth)) details.DateOfBirth = DateOfBirth.Trim();
-                if (!string.IsNullOrWhiteSpace(ParentName)) details.ParentName = ParentName.Trim();
-                if (!string.IsNullOrWhiteSpace(ParentPhone)) details.ParentPhone = ParentPhone.Trim();
-                if (!string.IsNullOrWhiteSpace(Address)) details.Address = Address.Trim();
-                if (!string.IsNullOrWhiteSpace(Email)) details.Email = Email.Trim();
-                if (!string.IsNullOrWhiteSpace(Status)) details.Status = Status.Trim();
-                await _dataService.SaveAsync(data);
+                var student = new Student { Id = SelectedStudent.Id, Name = Name, Age = int.TryParse(AgeText, out var parsed) ? parsed : SelectedStudent.Age, Gender = Gender, ClassLevel = ClassLevel, IsArchived = false };
+                var details = new StudentDetails { StudentId = SelectedStudent.Id, Arm = Arm, Department = Department, DateOfBirth = DateOfBirth, AdmissionNumber = AdmissionNumber, ParentName = ParentName, ParentPhone = ParentPhone, Address = Address, Email = Email, Status = string.IsNullOrWhiteSpace(Status) ? "Active" : Status };
+                await _studentService.UpdateProfileAsync(student, details);
                 StatusMessage = $"{student.Name} updated successfully.";
             }
             else
             {
-                student = await _studentService.AddAsync(Name, Gender, ClassLevel, Arm, Department);
+                var student = await _studentService.AddAsync(Name, Gender, ClassLevel, Arm, Department);
                 var data = await _dataService.LoadAsync();
                 var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
                 StatusMessage = $"{student.Name} registered as {student.Id}. Admission number {details?.AdmissionNumber ?? "assigned"}.";
@@ -114,7 +95,7 @@ public partial class StudentsViewModel : ObservableObject
         {
             SelectedStudent = student; Name = student.Name; AgeText = student.Age > 0 ? student.Age.ToString() : ""; Gender = student.Gender; ClassLevel = student.ClassLevel;
             var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
-            Arm = details?.Arm ?? ""; Department = details?.Department ?? ""; DateOfBirth = details?.DateOfBirth ?? ""; AdmissionNumber = details?.AdmissionNumber ?? ""; ParentName = details?.ParentName ?? ""; ParentPhone = details?.ParentPhone ?? ""; Address = details?.Address ?? ""; Email = details?.Email ?? ""; Status = details?.Status ?? "Active";
+            Arm = details?.Arm ?? ""; Department = details?.Department ?? (IsSeniorClass ? "" : "General"); DateOfBirth = details?.DateOfBirth ?? ""; AdmissionNumber = details?.AdmissionNumber ?? ""; ParentName = details?.ParentName ?? ""; ParentPhone = details?.ParentPhone ?? ""; Address = details?.Address ?? ""; Email = details?.Email ?? ""; Status = details?.Status ?? "Active";
             IsEditing = true; StatusMessage = $"Editing {student.Id}. Optional details can be completed here.";
         }
         catch (Exception ex) { StatusMessage = $"Could not load student: {ex.Message}"; }
