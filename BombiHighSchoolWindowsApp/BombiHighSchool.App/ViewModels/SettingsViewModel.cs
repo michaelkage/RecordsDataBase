@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BombiHighSchool.App.Models;
 using BombiHighSchool.App.Services;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
@@ -13,8 +14,38 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string currentPassword = "";
     [ObservableProperty] private string newPassword = "";
     [ObservableProperty] private string confirmPassword = "";
+    [ObservableProperty] private string session = "2026/2027";
+    [ObservableProperty] private string term = "First Term";
     [ObservableProperty] private string statusMessage = "";
     [ObservableProperty] private bool isBusy;
+    public string[] Terms => SchoolRules.Terms;
+
+    [RelayCommand]
+    private async Task LoadAcademicPeriodAsync()
+    {
+        var data = await _dataService.LoadAsync();
+        Session = data.CurrentAcademicPeriod.Session;
+        Term = data.CurrentAcademicPeriod.Term;
+    }
+
+    [RelayCommand]
+    private async Task SaveAcademicPeriodAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Session) || string.IsNullOrWhiteSpace(Term)) { StatusMessage = "Enter an academic session and term."; return; }
+        IsBusy = true;
+        try
+        {
+            await _dataService.UpdateAsync(data =>
+            {
+                data.CurrentAcademicPeriod.Session = Session.Trim();
+                data.CurrentAcademicPeriod.Term = Term.Trim();
+                return Task.CompletedTask;
+            });
+            StatusMessage = $"Academic period set to {Session.Trim()} • {Term.Trim()}.";
+        }
+        catch (Exception ex) { StatusMessage = $"Could not save academic period: {ex.Message}"; }
+        finally { IsBusy = false; }
+    }
 
     [RelayCommand]
     private async Task ChangeAdminPasswordAsync()
