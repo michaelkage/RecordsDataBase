@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
 using BombiHighSchool.App.Models;
 using BombiHighSchool.App.Services;
 
@@ -33,7 +34,7 @@ public partial class StudentsViewModel : ObservableObject
 
     public string FormTitle => IsEditing ? "Edit student" : "Register student";
     public string SaveButtonText => IsEditing ? "Save changes" : "Register student";
-    public System.Windows.Visibility OptionalDetailsVisibility => IsEditing ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+    public Visibility OptionalDetailsVisibility => IsEditing ? Visibility.Visible : Visibility.Collapsed;
     public string[] Genders { get; } = ["Male", "Female", "Other"];
     public string[] ClassLevels { get; } = ["JSS1", "JSS2", "JSS3", "SS1", "SS2", "SS3"];
     public string[] Arms => SchoolRules.Arms;
