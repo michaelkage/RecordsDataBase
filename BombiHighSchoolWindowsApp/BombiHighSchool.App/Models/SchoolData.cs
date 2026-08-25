@@ -8,4 +8,5 @@ public class SchoolData
     public List<SubjectEnrollment> Enrollments { get; set; } = [];
     public List<Score> Scores { get; set; } = [];
     public List<UserAccount> Users { get; set; } = [];
+    public AcademicPeriod CurrentAcademicPeriod { get; set; } = new();
 }
