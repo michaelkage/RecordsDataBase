@@ -14,14 +14,21 @@ public sealed class StudentService
         return data.Students.Where(s => includeArchived || !IsArchived(data, s.Id)).ToList();
     }
 
-    public async Task<Student> AddAsync(string name, int age, string gender, string classLevel, string arm, string department)
+    public async Task<Student> AddAsync(string name, string gender, string classLevel, string arm, string department)
     {
         Student student = new();
         await _dataService.UpdateAsync(data =>
         {
-            student = new Student { Id = GenerateNextId(data.Students), Name = name.Trim(), Age = age, Gender = gender.Trim(), ClassLevel = classLevel.Trim() };
+            student = new Student { Id = GenerateNextId(data.Students), Name = name.Trim(), Age = 0, Gender = gender.Trim(), ClassLevel = classLevel.Trim() };
             data.Students.Add(student);
-            data.StudentDetails.Add(new StudentDetails { StudentId = student.Id, Arm = arm.Trim(), Department = department.Trim(), Status = "Active" });
+            data.StudentDetails.Add(new StudentDetails
+            {
+                StudentId = student.Id,
+                Arm = arm.Trim(),
+                Department = department.Trim(),
+                AdmissionNumber = GenerateNextAdmissionNumber(data.StudentDetails),
+                Status = "Active"
+            });
             return Task.CompletedTask;
         });
         await _authenticationService.EnsureStudentAccountAsync(student.Id, "Welcome123!");
@@ -64,4 +71,5 @@ public sealed class StudentService
     public Task SetStudentAccountEnabledAsync(string id, bool enabled) => _authenticationService.SetStudentEnabledAsync(id, enabled);
     private static bool IsArchived(SchoolData data, string id) => data.StudentDetails.FirstOrDefault(d => d.StudentId == id)?.Status.Equals("Archived", StringComparison.OrdinalIgnoreCase) == true;
     private static string GenerateNextId(IEnumerable<Student> students) { var next = students.Select(s => s.Id).Where(id => id.StartsWith("BHS", StringComparison.OrdinalIgnoreCase)).Select(id => id[3..]).Select(v => int.TryParse(v, out var n) ? n : 0).DefaultIfEmpty(0).Max() + 1; return $"BHS{next:000000}"; }
+    private static string GenerateNextAdmissionNumber(IEnumerable<StudentDetails> details) { var next = details.Select(d => d.AdmissionNumber).Where(v => v.StartsWith("ADM", StringComparison.OrdinalIgnoreCase)).Select(v => v[3..]).Select(v => int.TryParse(v, out var n) ? n : 0).DefaultIfEmpty(0).Max() + 1; return $"ADM{next:000000}"; }
 }
