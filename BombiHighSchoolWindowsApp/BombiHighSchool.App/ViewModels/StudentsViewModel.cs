@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
 using BombiHighSchool.App.Models;
 using BombiHighSchool.App.Services;
 
@@ -33,6 +34,7 @@ public partial class StudentsViewModel : ObservableObject
 
     public string FormTitle => IsEditing ? "Edit student" : "Register student";
     public string SaveButtonText => IsEditing ? "Save changes" : "Register student";
+    public Visibility OptionalDetailsVisibility => IsEditing ? Visibility.Visible : Visibility.Collapsed;
     public string[] Genders { get; } = ["Male", "Female", "Other"];
     public string[] ClassLevels { get; } = ["JSS1", "JSS2", "JSS3", "SS1", "SS2", "SS3"];
     public string[] Arms { get; } = ["Gold", "Emerald", "Jade", "Silver", "Topaz", "Platinum", "White", "Crimson", "Diamond"];
@@ -42,7 +44,7 @@ public partial class StudentsViewModel : ObservableObject
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
     partial void OnClassLevelChanged(string value) { if (!IsSeniorClass) Department = "General"; else if (Department == "General") Department = ""; OnPropertyChanged(nameof(IsSeniorClass)); }
-    partial void OnIsEditingChanged(bool value) { OnPropertyChanged(nameof(FormTitle)); OnPropertyChanged(nameof(SaveButtonText)); }
+    partial void OnIsEditingChanged(bool value) { OnPropertyChanged(nameof(FormTitle)); OnPropertyChanged(nameof(SaveButtonText)); OnPropertyChanged(nameof(OptionalDetailsVisibility)); }
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -67,16 +69,11 @@ public partial class StudentsViewModel : ObservableObject
             Student student;
             if (IsEditing && SelectedStudent is not null)
             {
-                student = SelectedStudent;
-                student.Name = Name.Trim();
+                student = SelectedStudent; student.Name = Name.Trim();
                 if (int.TryParse(AgeText, out var age)) student.Age = age;
-                student.Gender = Gender.Trim();
-                student.ClassLevel = ClassLevel.Trim();
-                await _studentService.UpdateAsync(student);
-                StatusMessage = $"{student.Name} updated successfully.";
-
-                var data = await _dataService.LoadAsync();
-                var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
+                student.Gender = Gender.Trim(); student.ClassLevel = ClassLevel.Trim();
+                await _studentService.UpdateAsync(student); StatusMessage = $"{student.Name} updated successfully.";
+                var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
                 if (details is null) { details = new StudentDetails { StudentId = student.Id }; data.StudentDetails.Add(details); }
                 details.Arm = Arm.Trim(); details.Department = Department.Trim(); details.DateOfBirth = DateOfBirth.Trim(); details.ParentName = ParentName.Trim(); details.ParentPhone = ParentPhone.Trim(); details.Address = Address.Trim(); details.Email = Email.Trim(); details.Status = Status;
                 await _dataService.SaveAsync(data);
@@ -84,8 +81,7 @@ public partial class StudentsViewModel : ObservableObject
             else
             {
                 student = await _studentService.AddAsync(Name, Gender, ClassLevel, Arm, Department);
-                var data = await _dataService.LoadAsync();
-                var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
+                var data = await _dataService.LoadAsync(); var details = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
                 StatusMessage = $"{student.Name} registered as {student.Id}. Admission number {details?.AdmissionNumber ?? "assigned"}.";
             }
             await ReloadWithoutBusyMessageAsync(); ClearForm();
