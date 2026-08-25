@@ -16,13 +16,15 @@ public sealed class StudentService
     public async Task<List<Student>> GetAllAsync(bool includeArchived = false)
     {
         var data = await _dataService.LoadAsync();
-        // Student.IsArchived is the single authoritative lifecycle flag.
         return data.Students.Where(s => includeArchived || !s.IsArchived).ToList();
     }
 
     public async Task<Student> AddAsync(string name, string gender, string classLevel, string arm, string department)
     {
+        var (passwordHash, passwordSalt) = PasswordHasher.Hash("Welcome123!");
         Student student = new();
+
+        // Student + details + account are committed in one database mutation.
         await _dataService.UpdateAsync(data =>
         {
             var studentNumber = AllocateNextStudentNumber(data);
@@ -36,6 +38,7 @@ public sealed class StudentService
                 ClassLevel = classLevel.Trim(),
                 IsArchived = false
             };
+
             data.Students.Add(student);
             data.StudentDetails.Add(new StudentDetails
             {
@@ -45,24 +48,18 @@ public sealed class StudentService
                 AdmissionNumber = $"ADM{admissionNumber:000000}",
                 Status = "Active"
             });
+            data.Users.Add(new UserAccount
+            {
+                Username = student.Id,
+                StudentId = student.Id,
+                Role = "Student",
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                MustChangePassword = true,
+                IsEnabled = true
+            });
             return Task.CompletedTask;
         });
-
-        try
-        {
-            await _authenticationService.EnsureStudentAccountAsync(student.Id, "Welcome123!");
-        }
-        catch
-        {
-            // Roll back the student if its required account could not be created.
-            await _dataService.UpdateAsync(data =>
-            {
-                data.Students.RemoveAll(s => s.Id == student.Id);
-                data.StudentDetails.RemoveAll(d => d.StudentId == student.Id);
-                return Task.CompletedTask;
-            });
-            throw;
-        }
 
         return student;
     }
@@ -92,7 +89,6 @@ public sealed class StudentService
                 existingDetails.Arm = details.Arm.Trim();
                 existingDetails.Department = details.Department.Trim();
                 existingDetails.DateOfBirth = details.DateOfBirth.Trim();
-                // Admission numbers are generated identifiers and may only be retained, never changed by editing.
                 existingDetails.ParentName = details.ParentName.Trim();
                 existingDetails.ParentPhone = details.ParentPhone.Trim();
                 existingDetails.Address = details.Address.Trim();
