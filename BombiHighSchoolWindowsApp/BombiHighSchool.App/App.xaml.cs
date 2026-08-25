@@ -1,8 +1,13 @@
+using Microsoft.UI.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using BombiHighSchool.App.Services;
+using BombiHighSchool.App.ViewModels; // Ensure your ViewModels namespace is imported
+using BombiHighSchool.App.Views;        // Ensure your Views namespace is imported
+
+namespace BombiHighSchool.App;
 
 public partial class App : Application
 {
-    // Block 2: The Service Provider engine
     public IServiceProvider Services { get; }
 
     public App()
@@ -16,17 +21,34 @@ public partial class App : Application
 
     private void ConfigureServices(IServiceCollection services)
     {
+        // 1. Infrastructure and Core Business Logic Services
         services.AddSingleton<ILocalDataService, LocalDataService>();
-        // Register the window directly into the DI container!
-        services.AddTransient<MainWindow>(); 
+        // Add other cross-cutting services if you have them, e.g.:
+        // services.AddScoped<IReportingService, ReportingService>();
+        // services.AddScoped<AuthenticationService>();
+
+        // 2. ViewModels (Kept transient so they clear memory when closed)
         services.AddTransient<AdminAcademicViewModel>();
+        // Add other viewmodels here as you build them out, e.g.:
+        // services.AddTransient<StudentsViewModel>();
+
+        // 3. UI Shell Windows and Host Pages
+        services.AddTransient<MainWindow>(); 
+        services.AddTransient<MainPage>();
+
+        // 4. Sub-Navigation Content Pages
+        services.AddTransient<DashboardPage>();
+        services.AddTransient<StudentsPage>();
+        services.AddTransient<SubjectsPage>();
+        services.AddTransient<AdminAcademicPage>();
+        services.AddTransient<ScoresPage>();
+        services.AddTransient<RankingsPage>();
+        services.AddTransient<SettingsPage>();
     }
 
-    // Block 1: Use the engine inside the lifecycle launch
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // Instead of 'new MainWindow()', ask the DI engine to build it 
-        // and automatically inject any required services into its constructor.
+        // Resolves MainWindow, which automatically injects its contents via the container
         var mainWindow = Services.GetRequiredService<MainWindow>();
         mainWindow.Activate();
     }
