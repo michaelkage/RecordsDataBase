@@ -1,0 +1,18 @@
+The 4-Phase Execution Roadmap
+Phase 1: Analysis & Clean Up
+
+Audit: Remove expo-glass-effect, expo-blur, and any other unused package.json bloat (npm prune).
+Unify: Decide on your primary architecture. If you're building a mobile app, migrate the logic from App.js into src/app/ using expo-router. Delete the conflicting legacy App.js entry point.
+Phase 2: Decouple Architecture
+
+Logic Extraction: For the Windows app, move all Services and Models into a dedicated Class Library (BombiHighSchool.Core).
+UI Separation: For the mobile app, remove business logic from components. Create a store or service layer that handles data operations, independent of React view components.
+Phase 3: Type-Safety
+
+TS Migration: Rename .js files to .tsx and define strict Student, Score, and Subject interfaces.
+Schema Enforcement: Use these types to ensure the form in your CRUD modal cannot submit a student without scores or with malformed data.
+Phase 4: Secure Persistence & DI
+
+Dependency Injection: Stop using new Service() inside your components/views. Use a centralized container to manage dependencies (DI).
+Secrets Management: Extract ADMIN_PASSWORD into environment variables (.env).
+Atomic Persistence: Replace the "overwrite entire JSON" method with indexed queries (e.g., SQLite for local, or API calls for server-side) to ensure your app scales past 100 students without crashing.
