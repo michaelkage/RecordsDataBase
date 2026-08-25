@@ -7,4 +7,5 @@ public class Student
     public int Age { get; set; }
     public string Gender { get; set; } = "";
     public string ClassLevel { get; set; } = "";
+    public bool IsArchived { get; set; }
 }
