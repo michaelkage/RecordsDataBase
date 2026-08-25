@@ -1,0 +1,16 @@
+{
+  "dotnet.defaultSolution": "BombiHighSchool.App.csproj",
+  "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "openFiles",
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "editor.formatOnSave": true,
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
+  }
+}
