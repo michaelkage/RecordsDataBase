@@ -8,10 +8,11 @@ namespace BombiHighSchool.App.ViewModels;
 
 public partial class ScoresViewModel : ObservableObject
 {
-    private readonly LocalDataService _data = new();
-    private readonly ScoreService _service = new();
+    private readonly LocalDataService _data = LocalDataService.Shared;
+    private readonly ScoreService _service;
     private List<Subject> _allSubjects = [];
     private List<SubjectEnrollment> _enrollments = [];
+    private int _subjectLoadVersion;
     [ObservableProperty] private ObservableCollection<Student> students = [];
     [ObservableProperty] private ObservableCollection<Subject> subjects = [];
     [ObservableProperty] private Student? selectedStudent;
@@ -23,42 +24,43 @@ public partial class ScoresViewModel : ObservableObject
     [ObservableProperty] private string currentGrade = "—";
     [ObservableProperty] private bool isBusy;
 
+    public ScoresViewModel() => _service = new ScoreService(_data);
     partial void OnTestTextChanged(string value) => Recalculate();
     partial void OnExamTextChanged(string value) => Recalculate();
     partial void OnSelectedStudentChanged(Student? value)
     {
-        SelectedSubject = null;
-        TestText = "";
-        ExamText = "";
+        _subjectLoadVersion++;
+        SelectedSubject = null; TestText = ""; ExamText = "";
         if (value is null) { Subjects = new(); return; }
-        var enrolledIds = _enrollments.Where(e => e.StudentId == value.Id).Select(e => e.SubjectId).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        Subjects = new ObservableCollection<Subject>(_allSubjects.Where(s => enrolledIds.Contains(s.Id)));
+        var ids = _enrollments.Where(e => e.StudentId.Equals(value.Id, StringComparison.OrdinalIgnoreCase)).Select(e => e.SubjectId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Subjects = new ObservableCollection<Subject>(_allSubjects.Where(s => ids.Contains(s.Id)));
         StatusMessage = Subjects.Count == 0 ? "This student has no enrolled subjects yet. Enroll the student before entering scores." : $"{Subjects.Count} enrolled subject{(Subjects.Count == 1 ? "" : "s")} available.";
     }
 
     partial void OnSelectedSubjectChanged(Subject? value)
     {
-        TestText = "";
-        ExamText = "";
-        _ = LoadSelectedSubjectAsync(value);
+        TestText = ""; ExamText = "";
+        var version = ++_subjectLoadVersion;
+        _ = LoadSelectedSubjectAsync(value, version);
     }
 
-    private async Task LoadSelectedSubjectAsync(Subject? value)
+    private async Task LoadSelectedSubjectAsync(Subject? value, int version)
     {
-        if (SelectedStudent is null || value is null) { Recalculate(); return; }
+        var student = SelectedStudent;
+        if (student is null || value is null) { Recalculate(); return; }
         try
         {
             var period = await _data.LoadAsync();
-            var score = period.Scores.FirstOrDefault(s => s.StudentId == SelectedStudent.Id && s.SubjectId == value.Id && s.Session == period.CurrentAcademicPeriod.Session && s.Term == period.CurrentAcademicPeriod.Term);
+            if (version != _subjectLoadVersion || SelectedStudent?.Id != student.Id || SelectedSubject?.Id != value.Id) return;
+            var score = period.Scores.FirstOrDefault(s => s.StudentId.Equals(student.Id, StringComparison.OrdinalIgnoreCase) && s.SubjectId.Equals(value.Id, StringComparison.OrdinalIgnoreCase) && s.Session.Equals(period.CurrentAcademicPeriod.Session, StringComparison.OrdinalIgnoreCase) && s.Term.Equals(period.CurrentAcademicPeriod.Term, StringComparison.OrdinalIgnoreCase));
             if (score is not null)
             {
-                TestText = score.ScoreValue.ToString("0.#");
-                ExamText = score.ExamScore.ToString("0.#");
+                TestText = score.ScoreValue.ToString("0.#"); ExamText = score.ExamScore.ToString("0.#");
                 StatusMessage = $"Existing {period.CurrentAcademicPeriod.Term} result loaded. Edit and save to update it.";
             }
             else StatusMessage = "No result exists for this student and subject in the current academic period.";
         }
-        catch (Exception ex) { StatusMessage = $"Could not load the existing score: {ex.Message}"; }
+        catch (Exception ex) { if (version == _subjectLoadVersion) StatusMessage = $"Could not load the existing score: {ex.Message}"; }
     }
 
     private void Recalculate()
@@ -77,12 +79,8 @@ public partial class ScoresViewModel : ObservableObject
         {
             var d = await _data.LoadAsync();
             Students = new(d.Students.Where(s => !s.IsArchived && d.StudentDetails.FirstOrDefault(x => x.StudentId == s.Id)?.Status != "Archived"));
-            _allSubjects = d.Subjects.ToList();
-            _enrollments = d.Enrollments.ToList();
-            Subjects = new();
-            SelectedStudent = null;
-            SelectedSubject = null;
-            TestText = ExamText = "";
+            _allSubjects = d.Subjects.ToList(); _enrollments = d.Enrollments.ToList();
+            Subjects = new(); SelectedStudent = null; SelectedSubject = null; TestText = ExamText = "";
             StatusMessage = $"Ready for {d.CurrentAcademicPeriod.Session} • {d.CurrentAcademicPeriod.Term}. Select a student to see only their enrolled subjects.";
         }
         catch (Exception ex) { StatusMessage = $"Could not load scores: {ex.Message}"; }
@@ -93,23 +91,15 @@ public partial class ScoresViewModel : ObservableObject
     {
         if (SelectedStudent is null) { StatusMessage = "Select a student first."; return false; }
         if (SelectedSubject is null) { StatusMessage = "Select an enrolled subject first."; return false; }
-        if (!double.TryParse(TestText, out var t) || !double.TryParse(ExamText, out var e) || t < 0 || t > 40 || e < 0 || e > 60) { StatusMessage = "Test must be 0–40 and exam must be 0–60."; return false; }
+        if (!double.TryParse(TestText, out var t) || !double.TryParse(ExamText, out var e) || !double.IsFinite(t) || !double.IsFinite(e) || t < 0 || t > 40 || e < 0 || e > 60) { StatusMessage = "Test must be 0–40 and exam must be 0–60."; return false; }
         await _service.SaveAsync(SelectedStudent.Id, SelectedSubject.Id, t, e);
         StatusMessage = $"Saved {SelectedStudent.Name}: {SelectedSubject.Name} — {CurrentTotal:0.#} ({CurrentGrade}).";
         return true;
     }
 
-    [RelayCommand]
-    private async Task SaveAsync()
-    {
-        IsBusy = true;
-        try { await SaveCurrentAsync(); }
-        catch (Exception ex) { StatusMessage = $"Could not save score: {ex.Message}"; }
-        finally { IsBusy = false; }
-    }
+    [RelayCommand] private async Task SaveAsync() { IsBusy = true; try { await SaveCurrentAsync(); } catch (Exception ex) { StatusMessage = $"Could not save score: {ex.Message}"; } finally { IsBusy = false; } }
 
-    [RelayCommand]
-    private async Task SaveAndNextAsync()
+    [RelayCommand] private async Task SaveAndNextAsync()
     {
         IsBusy = true;
         try
@@ -117,12 +107,11 @@ public partial class ScoresViewModel : ObservableObject
             if (!await SaveCurrentAsync()) return;
             var index = SelectedStudent is null ? -1 : Students.IndexOf(SelectedStudent);
             if (index >= 0 && index + 1 < Students.Count) { SelectedStudent = Students[index + 1]; StatusMessage += " Next student selected."; }
-            else { StatusMessage += " Reached the end of the student list."; }
+            else StatusMessage += " Reached the end of the student list.";
         }
         catch (Exception ex) { StatusMessage = $"Could not save score: {ex.Message}"; }
         finally { IsBusy = false; }
     }
 
-    [RelayCommand]
-    private void Clear() { TestText = ""; ExamText = ""; StatusMessage = "Entry cleared."; }
+    [RelayCommand] private void Clear() { TestText = ""; ExamText = ""; StatusMessage = "Entry cleared."; }
 }
