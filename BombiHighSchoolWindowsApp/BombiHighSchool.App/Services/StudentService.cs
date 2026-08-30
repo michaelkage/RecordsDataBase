@@ -9,7 +9,7 @@ public sealed class StudentService
 
     public StudentService(LocalDataService? dataService = null, AuthenticationService? authenticationService = null)
     {
-        _dataService = dataService ?? new LocalDataService();
+        _dataService = dataService ?? LocalDataService.Shared;
         _authenticationService = authenticationService ?? new AuthenticationService(_dataService);
     }
 
@@ -21,10 +21,14 @@ public sealed class StudentService
 
     public async Task<Student> AddAsync(string name, string gender, string classLevel, string arm, string department)
     {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Student name is required.", nameof(name));
+        if (string.IsNullOrWhiteSpace(gender)) throw new ArgumentException("Student gender is required.", nameof(gender));
+        if (string.IsNullOrWhiteSpace(classLevel)) throw new ArgumentException("Class level is required.", nameof(classLevel));
+        if (string.IsNullOrWhiteSpace(arm)) throw new ArgumentException("Arm is required.", nameof(arm));
+
         var (passwordHash, passwordSalt) = PasswordHasher.Hash("Welcome123!");
         Student student = new();
 
-        // Student + details + account are committed in one database mutation.
         await _dataService.UpdateAsync(data =>
         {
             var studentNumber = AllocateNextStudentNumber(data);
@@ -58,6 +62,13 @@ public sealed class StudentService
                 MustChangePassword = true,
                 IsEnabled = true
             });
+
+            foreach (var subject in data.Subjects.Where(x => x.IsCompulsory))
+            {
+                if (!data.Enrollments.Any(x => x.StudentId == student.Id && x.SubjectId == subject.Id))
+                    data.Enrollments.Add(new SubjectEnrollment { StudentId = student.Id, SubjectId = subject.Id });
+            }
+
             return Task.CompletedTask;
         });
 
@@ -66,6 +77,9 @@ public sealed class StudentService
 
     public async Task UpdateProfileAsync(Student student, StudentDetails details)
     {
+        ArgumentNullException.ThrowIfNull(student);
+        ArgumentNullException.ThrowIfNull(details);
+
         await _dataService.UpdateAsync(data =>
         {
             var existing = data.Students.FirstOrDefault(s => s.Id == student.Id)
@@ -75,7 +89,6 @@ public sealed class StudentService
             existing.Age = student.Age;
             existing.Gender = student.Gender.Trim();
             existing.ClassLevel = student.ClassLevel.Trim();
-            // Editing profile data MUST NOT change lifecycle state.
 
             var existingDetails = data.StudentDetails.FirstOrDefault(d => d.StudentId == student.Id);
             if (existingDetails is null)
@@ -89,6 +102,7 @@ public sealed class StudentService
                 existingDetails.Arm = details.Arm.Trim();
                 existingDetails.Department = details.Department.Trim();
                 existingDetails.DateOfBirth = details.DateOfBirth.Trim();
+                existingDetails.AdmissionNumber = details.AdmissionNumber.Trim();
                 existingDetails.ParentName = details.ParentName.Trim();
                 existingDetails.ParentPhone = details.ParentPhone.Trim();
                 existingDetails.Address = details.Address.Trim();
