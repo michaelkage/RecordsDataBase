@@ -61,7 +61,7 @@ public partial class ScoresViewModel : ObservableObject
         double.TryParse(TestText, out var t); double.TryParse(ExamText, out var e);
         var total = Math.Clamp(t, 0, 40) + Math.Clamp(e, 0, 60);
         CurrentTotal = total;
-        CurrentGrade = total switch { >=75=>"A", >=70=>"B", >=60=>"C", >=50=>"D", >=45=>"E", _=>"F" };
+        CurrentGrade = total switch { >= 75 => "A", >= 70 => "B", >= 60 => "C", >= 50 => "D", >= 45 => "E", _ => "F" };
     }
 
     [RelayCommand]
