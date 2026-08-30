@@ -10,7 +10,12 @@ public sealed class LocalDataService
     private const string BackupFileName = "database.backup.json";
     private const int MaxArchivedBackups = 10;
     private static readonly SemaphoreSlim FileLock = new(1, 1);
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNameCaseInsensitive = true
+    };
+
     private readonly string _databasePath;
     private readonly string _backupPath;
     private readonly string _backupDirectory;
@@ -32,8 +37,14 @@ public sealed class LocalDataService
     {
         LastLoadWarning = null;
         await FileLock.WaitAsync();
-        try { return await LoadUnlockedAsync(); }
-        finally { FileLock.Release(); }
+        try
+        {
+            return await LoadUnlockedAsync();
+        }
+        finally
+        {
+            FileLock.Release();
+        }
     }
 
     public async Task UpdateAsync(Func<SchoolData, Task> mutation)
@@ -48,7 +59,10 @@ public sealed class LocalDataService
             DatabaseIntegrityValidator.Validate(data);
             await SaveUnlockedAsync(data, true);
         }
-        finally { FileLock.Release(); }
+        finally
+        {
+            FileLock.Release();
+        }
     }
 
     private async Task<SchoolData> LoadUnlockedAsync()
@@ -63,30 +77,43 @@ public sealed class LocalDataService
         try
         {
             var json = await File.ReadAllTextAsync(_databasePath);
-            var data = JsonSerializer.Deserialize<SchoolData>(json, JsonOptions) ?? throw new JsonException("Database is empty.");
+            var data = JsonSerializer.Deserialize<SchoolData>(json, JsonOptions)
+                ?? throw new JsonException("Database is empty.");
             DatabaseIntegrityValidator.Validate(data);
             return data;
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or DatabaseIntegrityException)
         {
-            if (File.Exists(_backupPath))
+            if (!File.Exists(_backupPath))
+                throw new DatabaseUnavailableException(
+                    "The local school database could not be read or failed integrity checks. Your data was not replaced with an empty database. Use Settings → Restore backup or Import database.",
+                    ex);
+
+            try
             {
-                try
-                {
-                    var backupJson = await File.ReadAllTextAsync(_backupPath);
-                    var recovered = JsonSerializer.Deserialize<SchoolData>(backupJson, JsonOptions);
-                    if (recovered is not null)
-                    {
-                        DatabaseIntegrityValidator.Validate(recovered);
-                        var corruptCopy = _databasePath + ".corrupt-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".json";
-                        try { File.Copy(_databasePath, corruptCopy, true); } catch { }
-                        LastLoadWarning = "The active database was damaged. Bombi High School recovered the latest valid backup and preserved the damaged file. Review Settings → Database management.";
-                        return recovered;
-                    }
-                }
-                catch { }
+                var backupJson = await File.ReadAllTextAsync(_backupPath);
+                var recovered = JsonSerializer.Deserialize<SchoolData>(backupJson, JsonOptions)
+                    ?? throw new JsonException("The backup is empty.");
+                DatabaseIntegrityValidator.Validate(recovered);
+
+                var corruptCopy = _databasePath + ".corrupt-" + DateTime.Now.ToString("yyyyMMdd-HHmmssfff") + ".json";
+                try { File.Copy(_databasePath, corruptCopy, true); } catch { }
+
+                // Restore the valid backup immediately. Otherwise every subsequent load would
+                // rediscover the same corrupt database and silently keep using a stale in-memory copy.
+                var recoveryTemp = _databasePath + ".recovery.tmp";
+                await File.WriteAllTextAsync(recoveryTemp, JsonSerializer.Serialize(recovered, JsonOptions));
+                File.Move(recoveryTemp, _databasePath, true);
+
+                LastLoadWarning = "The active database was damaged. Bombi High School recovered the latest valid backup and preserved the damaged file.";
+                return recovered;
             }
-            throw new DatabaseUnavailableException("The local school database could not be read or failed integrity checks. Your data was not replaced with an empty database. Use Settings → Restore backup or Import database.", ex);
+            catch (Exception recoveryEx) when (recoveryEx is JsonException or IOException or UnauthorizedAccessException or DatabaseIntegrityException)
+            {
+                throw new DatabaseUnavailableException(
+                    "The local school database and its backup could not be read safely. Your data was not replaced with an empty database. Use Settings → Restore backup or Import database.",
+                    recoveryEx);
+            }
         }
     }
 
@@ -94,8 +121,14 @@ public sealed class LocalDataService
     {
         DatabaseIntegrityValidator.Validate(data);
         await FileLock.WaitAsync();
-        try { await SaveUnlockedAsync(data, true); }
-        finally { FileLock.Release(); }
+        try
+        {
+            await SaveUnlockedAsync(data, true);
+        }
+        finally
+        {
+            FileLock.Release();
+        }
     }
 
     private async Task SaveUnlockedAsync(SchoolData data, bool createBackup)
@@ -119,15 +152,25 @@ public sealed class LocalDataService
         try
         {
             Directory.CreateDirectory(_backupDirectory);
-            var archivePath = Path.Combine(_backupDirectory, $"database-{DateTime.Now:yyyyMMdd-HHmmssfff}.json");
+            var archivePath = Path.Combine(
+                _backupDirectory,
+                $"database-{DateTime.Now:yyyyMMdd-HHmmssfff}.json");
             File.Copy(sourcePath, archivePath, false);
+
             var old = Directory.GetFiles(_backupDirectory, "database-*.json")
                 .OrderByDescending(File.GetCreationTimeUtc)
                 .Skip(MaxArchivedBackups)
                 .ToList();
-            foreach (var file in old) { try { File.Delete(file); } catch { } }
+
+            foreach (var file in old)
+            {
+                try { File.Delete(file); } catch { }
+            }
         }
-        catch { /* Backup archiving must never block a valid database save. */ }
+        catch
+        {
+            // Backup archiving must never block a valid database save.
+        }
     }
 
     public async Task CreateBackupAsync()
@@ -135,13 +178,18 @@ public sealed class LocalDataService
         await FileLock.WaitAsync();
         try
         {
-            if (!File.Exists(_databasePath)) throw new InvalidOperationException("There is no local database to back up yet.");
+            if (!File.Exists(_databasePath))
+                throw new InvalidOperationException("There is no local database to back up yet.");
+
             var data = await LoadUnlockedAsync();
             DatabaseIntegrityValidator.Validate(data);
             File.Copy(_databasePath, _backupPath, true);
             ArchiveBackup(_databasePath);
         }
-        finally { FileLock.Release(); }
+        finally
+        {
+            FileLock.Release();
+        }
     }
 
     public async Task RestoreBackupAsync()
@@ -149,46 +197,75 @@ public sealed class LocalDataService
         await FileLock.WaitAsync();
         try
         {
-            if (!File.Exists(_backupPath)) throw new FileNotFoundException("No local backup exists yet.");
+            if (!File.Exists(_backupPath))
+                throw new FileNotFoundException("No local backup exists yet.");
+
             var backupJson = await File.ReadAllTextAsync(_backupPath);
-            var backup = JsonSerializer.Deserialize<SchoolData>(backupJson, JsonOptions) ?? throw new JsonException("The backup is empty.");
+            var backup = JsonSerializer.Deserialize<SchoolData>(backupJson, JsonOptions)
+                ?? throw new JsonException("The backup is empty.");
             DatabaseIntegrityValidator.Validate(backup);
 
             if (File.Exists(_databasePath))
             {
-                File.Copy(_databasePath, _databasePath + ".before-restore-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".json", true);
+                File.Copy(
+                    _databasePath,
+                    _databasePath + ".before-restore-" + DateTime.Now.ToString("yyyyMMdd-HHmmssfff") + ".json",
+                    true);
                 ArchiveBackup(_databasePath);
             }
 
             var tempPath = _databasePath + ".restore.tmp";
             await File.WriteAllTextAsync(tempPath, JsonSerializer.Serialize(backup, JsonOptions));
             File.Move(tempPath, _databasePath, true);
-            _ = await LoadUnlockedAsync();
+            DatabaseIntegrityValidator.Validate(backup);
         }
-        finally { FileLock.Release(); }
+        finally
+        {
+            FileLock.Release();
+        }
     }
 
     public async Task ExportDatabaseAsync(string destinationPath)
     {
+        if (string.IsNullOrWhiteSpace(destinationPath))
+            throw new ArgumentException("A destination path is required.", nameof(destinationPath));
+
+        var fullDestination = Path.GetFullPath(destinationPath);
         await FileLock.WaitAsync();
         try
         {
-            if (!File.Exists(_databasePath)) throw new InvalidOperationException("There is no local database to export.");
+            if (!File.Exists(_databasePath))
+                throw new InvalidOperationException("There is no local database to export.");
+            if (string.Equals(fullDestination, _databasePath, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("The export destination cannot be the active database file.");
+
             var data = await LoadUnlockedAsync();
             DatabaseIntegrityValidator.Validate(data);
-            File.Copy(_databasePath, destinationPath, true);
+            File.Copy(_databasePath, fullDestination, true);
         }
-        finally { FileLock.Release(); }
+        finally
+        {
+            FileLock.Release();
+        }
     }
 
     public async Task ImportDatabaseAsync(string sourcePath)
     {
+        if (string.IsNullOrWhiteSpace(sourcePath))
+            throw new ArgumentException("A source path is required.", nameof(sourcePath));
+
+        var fullSource = Path.GetFullPath(sourcePath);
         await FileLock.WaitAsync();
         try
         {
-            if (!File.Exists(sourcePath)) throw new FileNotFoundException("The selected database file does not exist.");
-            var json = await File.ReadAllTextAsync(sourcePath);
-            var imported = JsonSerializer.Deserialize<SchoolData>(json, JsonOptions) ?? throw new JsonException("The selected file is not a valid Bombi High School database.");
+            if (!File.Exists(fullSource))
+                throw new FileNotFoundException("The selected database file does not exist.");
+            if (string.Equals(fullSource, _databasePath, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("The selected file is already the active database.");
+
+            var json = await File.ReadAllTextAsync(fullSource);
+            var imported = JsonSerializer.Deserialize<SchoolData>(json, JsonOptions)
+                ?? throw new JsonException("The selected file is not a valid Bombi High School database.");
             DatabaseIntegrityValidator.Validate(imported);
 
             if (File.Exists(_databasePath))
@@ -201,11 +278,15 @@ public sealed class LocalDataService
             await File.WriteAllTextAsync(tempPath, JsonSerializer.Serialize(imported, JsonOptions));
             File.Move(tempPath, _databasePath, true);
         }
-        finally { FileLock.Release(); }
+        finally
+        {
+            FileLock.Release();
+        }
     }
 }
 
 public sealed class DatabaseUnavailableException : Exception
 {
-    public DatabaseUnavailableException(string message, Exception inner) : base(message, inner) { }
+    public DatabaseUnavailableException(string message, Exception inner)
+        : base(message, inner) { }
 }

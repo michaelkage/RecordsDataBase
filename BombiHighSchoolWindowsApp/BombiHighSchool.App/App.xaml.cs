@@ -1,5 +1,5 @@
-using Microsoft.UI.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
 using BombiHighSchool.App.Services;
 using BombiHighSchool.App.ViewModels;
 using BombiHighSchool.App.Views;
@@ -18,15 +18,17 @@ public partial class App : Application
         Services = services.BuildServiceProvider();
     }
 
-    private void ConfigureServices(IServiceCollection services)
+    private static void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<ILocalDataService, LocalDataService>();
+        services.AddSingleton<LocalDataService>();
+        services.AddSingleton<AuthenticationService>();
         services.AddSingleton<GlobalSearchService>();
         services.AddSingleton<NotificationService>(_ => NotificationService.Instance);
 
         services.AddTransient<AdminAcademicViewModel>();
         services.AddTransient<MainWindow>();
         services.AddTransient<MainPage>();
+        services.AddTransient<LoginPage>();
         services.AddTransient<DashboardPage>();
         services.AddTransient<StudentsPage>();
         services.AddTransient<SubjectsPage>();
