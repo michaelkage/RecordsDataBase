@@ -79,11 +79,12 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task ExportDatabaseAsync()
     {
-        if (App.MainWindow is null) { StatusMessage = "The application window is unavailable."; return; }
+        var mainWindow = MainWindow.Current;
+        if (mainWindow is null) { StatusMessage = "The application window is unavailable."; return; }
         try
         {
             var picker = new FileSavePicker();
-            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(mainWindow));
             picker.SuggestedFileName = $"BombiHighSchool-Database-{DateTime.Now:yyyyMMdd-HHmm}.json";
             picker.FileTypeChoices.Add("Bombi High School database", new List<string> { ".json" });
             var file = await picker.PickSaveFileAsync();
@@ -99,11 +100,12 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task ImportDatabaseAsync()
     {
-        if (App.MainWindow is null) { StatusMessage = "The application window is unavailable."; return; }
+        var mainWindow = MainWindow.Current;
+        if (mainWindow is null) { StatusMessage = "The application window is unavailable."; return; }
         try
         {
             var picker = new FileOpenPicker();
-            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(mainWindow));
             picker.FileTypeFilter.Add(".json");
             var file = await picker.PickSingleFileAsync();
             if (file is null) return;
