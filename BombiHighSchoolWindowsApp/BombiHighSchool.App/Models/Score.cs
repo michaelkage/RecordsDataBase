@@ -9,7 +9,7 @@ public class Score
     public string Term { get; set; } = "First Term";
     public double ScoreValue { get; set; }
     public double ExamScore { get; set; }
-    public double Total => Math.Clamp(ScoreValue + ExamScore, 0, 100);
+    public double Total => ScoreValue + ExamScore;
     public string Grade => Total switch
     {
         >= 75 => "A",
