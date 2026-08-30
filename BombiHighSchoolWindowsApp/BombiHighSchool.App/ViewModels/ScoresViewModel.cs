@@ -36,10 +36,15 @@ public partial class ScoresViewModel : ObservableObject
         StatusMessage = Subjects.Count == 0 ? "This student has no enrolled subjects yet. Enroll the student before entering scores." : $"{Subjects.Count} enrolled subject{(Subjects.Count == 1 ? "" : "s")} available.";
     }
 
-    partial async void OnSelectedSubjectChanged(Subject? value)
+    partial void OnSelectedSubjectChanged(Subject? value)
     {
         TestText = "";
         ExamText = "";
+        _ = LoadSelectedSubjectAsync(value);
+    }
+
+    private async Task LoadSelectedSubjectAsync(Subject? value)
+    {
         if (SelectedStudent is null || value is null) { Recalculate(); return; }
         try
         {
