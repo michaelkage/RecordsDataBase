@@ -1,42 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page x:Class="BombiHighSchool.App.Views.StudentsPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{StaticResource PageBackgroundBrush}">
-    <ScrollViewer Padding="32,28,32,40">
-        <Grid MaxWidth="1500" HorizontalAlignment="Left" RowSpacing="20">
+    <ScrollViewer Style="{StaticResource PageScrollStyle}">
+        <Grid MaxWidth="1500" HorizontalAlignment="Left" RowSpacing="18">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+
             <Grid>
-                <StackPanel Spacing="5"><TextBlock Text="Students" Style="{StaticResource PageTitleStyle}"/><TextBlock Text="Register, edit and manage student academic records." Style="{StaticResource PageSubtitleStyle}"/></StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="10"><Button Content="Refresh" Command="{x:Bind ViewModel.LoadCommand}" Style="{StaticResource SecondaryButtonStyle}"/><Button Content="New student" Click="NewStudent_Click" Style="{StaticResource PrimaryButtonStyle}"/></StackPanel>
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Students" Style="{StaticResource PageTitleStyle}"/>
+                    <TextBlock Text="Register, edit and manage student academic records." Style="{StaticResource PageSubtitleStyle}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="8">
+                    <Button Click="NewStudent_Click" Style="{StaticResource PrimaryButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="7"><SymbolIcon Symbol="Add"/><TextBlock Text="New student"/></StackPanel>
+                    </Button>
+                    <Button Command="{x:Bind ViewModel.LoadCommand}" Style="{StaticResource SecondaryButtonStyle}" ToolTipService.ToolTip="Refresh student records">
+                        <SymbolIcon Symbol="Refresh"/>
+                    </Button>
+                </StackPanel>
             </Grid>
-            <Grid Grid.Row="1" ColumnSpacing="12">
-                <Border Style="{StaticResource InsetStyle}"><StackPanel Orientation="Horizontal" Spacing="10" Padding="4"><TextBlock Text="●" Foreground="{StaticResource SuccessBrush}" FontSize="14" VerticalAlignment="Center"/><TextBlock Text="Student records" FontWeight="SemiBold"/><TextBlock Text="Search, select and manage records from one workspace." Foreground="{StaticResource TextSecondaryBrush}"/></StackPanel></Border>
-            </Grid>
-            <Grid Grid.Row="2" ColumnSpacing="20">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="500"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+            <InfoBar Grid.Row="1" IsOpen="True" IsClosable="False" Severity="Informational" Title="Student records" Message="Search, select and manage records from one workspace."/>
+
+            <Grid Grid.Row="2" ColumnSpacing="18">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="440"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
                 <Border Style="{StaticResource CardStyle}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="13">
-                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Spacing="4"><TextBlock Text="{x:Bind ViewModel.FormTitle, Mode=OneWay}" Style="{StaticResource SectionTitleStyle}"/><TextBlock Text="Required fields are marked with *. IDs and admission numbers are generated automatically." FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/></StackPanel><Button Grid.Column="1" Content="Clear" Command="{x:Bind ViewModel.CancelEditCommand}" Style="{StaticResource SecondaryButtonStyle}"/></Grid>
-                            <Border Height="1" Background="{StaticResource SurfaceBorderBrush}" Margin="0,1,0,3"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="{x:Bind ViewModel.FormTitle, Mode=OneWay}" Style="{StaticResource SectionTitleStyle}"/>
+                                    <TextBlock Text="Required fields are marked with *." FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{x:Bind ViewModel.CancelEditCommand}" Style="{StaticResource SecondaryButtonStyle}" ToolTipService.ToolTip="Clear form">
+                                    <SymbolIcon Symbol="Clear"/>
+                                </Button>
+                            </Grid>
+                            <Border Height="1" Background="{StaticResource SurfaceBorderBrush}"/>
+
                             <TextBox Header="Full name *" Text="{x:Bind ViewModel.Name, Mode=TwoWay}" PlaceholderText="Enter student's full name"/>
-                            <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions><ComboBox Header="Gender *" SelectedItem="{x:Bind ViewModel.Gender, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Genders}"/><ComboBox Grid.Column="1" Header="Class *" SelectedItem="{x:Bind ViewModel.ClassLevel, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ClassLevels}"/></Grid>
-                            <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions><ComboBox Header="Arm *" SelectedItem="{x:Bind ViewModel.Arm, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Arms}"/><ComboBox Grid.Column="1" Header="Department *" IsEnabled="{x:Bind ViewModel.IsSeniorClass, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.Department, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Departments}"/></Grid>
-                            <Border Style="{StaticResource InsetStyle}" Padding="14"><StackPanel Spacing="5"><TextBlock Text="Optional details" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="Contact and profile details can be added when editing a student." FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/></StackPanel></Border>
-                            <StackPanel Visibility="{x:Bind ViewModel.OptionalDetailsVisibility, Mode=OneWay}" Spacing="10">
-                                <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions><TextBox Header="Age (optional)" Text="{x:Bind ViewModel.AgeText, Mode=TwoWay}" InputScope="Number" PlaceholderText="Leave blank if unknown"/><TextBox Grid.Column="1" Header="Date of birth (optional)" Text="{x:Bind ViewModel.DateOfBirth, Mode=TwoWay}" PlaceholderText="DD/MM/YYYY"/></Grid>
-                                <TextBox Header="Admission number" Text="{x:Bind ViewModel.AdmissionNumber, Mode=TwoWay}" IsReadOnly="True"/><TextBox Header="Parent / guardian name (optional)" Text="{x:Bind ViewModel.ParentName, Mode=TwoWay}"/><TextBox Header="Parent / guardian phone (optional)" Text="{x:Bind ViewModel.ParentPhone, Mode=TwoWay}"/><TextBox Header="Email (optional)" Text="{x:Bind ViewModel.Email, Mode=TwoWay}"/><TextBox Header="Address (optional)" Text="{x:Bind ViewModel.Address, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70"/><ComboBox Header="Status" SelectedItem="{x:Bind ViewModel.Status, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Statuses}"/>
-                            </StackPanel>
+                            <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                <ComboBox Header="Gender *" SelectedItem="{x:Bind ViewModel.Gender, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Genders}"/>
+                                <ComboBox Grid.Column="1" Header="Class *" SelectedItem="{x:Bind ViewModel.ClassLevel, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ClassLevels}"/>
+                            </Grid>
+                            <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                <ComboBox Header="Arm *" SelectedItem="{x:Bind ViewModel.Arm, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Arms}"/>
+                                <ComboBox Grid.Column="1" Header="Department *" IsEnabled="{x:Bind ViewModel.IsSeniorClass, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.Department, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Departments}"/>
+                            </Grid>
+
+                            <Expander Header="Optional details" IsExpanded="{x:Bind ViewModel.OptionalDetailsVisibility, Mode=OneWay}" IsEnabled="True">
+                                <StackPanel Spacing="10" Padding="0,8,0,0">
+                                    <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                        <TextBox Header="Age" Text="{x:Bind ViewModel.AgeText, Mode=TwoWay}" InputScope="Number" PlaceholderText="Optional"/>
+                                        <TextBox Grid.Column="1" Header="Date of birth" Text="{x:Bind ViewModel.DateOfBirth, Mode=TwoWay}" PlaceholderText="DD/MM/YYYY"/>
+                                    </Grid>
+                                    <TextBox Header="Admission number" Text="{x:Bind ViewModel.AdmissionNumber, Mode=TwoWay}" IsReadOnly="True"/>
+                                    <TextBox Header="Parent / guardian name" Text="{x:Bind ViewModel.ParentName, Mode=TwoWay}" PlaceholderText="Optional"/>
+                                    <TextBox Header="Parent / guardian phone" Text="{x:Bind ViewModel.ParentPhone, Mode=TwoWay}" PlaceholderText="Optional"/>
+                                    <TextBox Header="Email" Text="{x:Bind ViewModel.Email, Mode=TwoWay}" PlaceholderText="Optional"/>
+                                    <TextBox Header="Address" Text="{x:Bind ViewModel.Address, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70" PlaceholderText="Optional"/>
+                                    <ComboBox Header="Status" SelectedItem="{x:Bind ViewModel.Status, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Statuses}"/>
+                                </StackPanel>
+                            </Expander>
+
                             <Button Content="{x:Bind ViewModel.SaveButtonText, Mode=OneWay}" Command="{x:Bind ViewModel.SaveCommand}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Stretch"/>
-                            <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="24" Height="24" HorizontalAlignment="Center"/>
+                            <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="22" Height="22" HorizontalAlignment="Center"/>
                             <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
+
                 <Border Grid.Column="1" Style="{StaticResource CardStyle}">
-                    <Grid RowSpacing="14"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Spacing="3"><TextBlock Text="Student directory" Style="{StaticResource SectionTitleStyle}"/><TextBlock Text="Select a record to edit or archive it." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/></StackPanel><TextBlock Grid.Column="1" Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/></Grid>
-                        <Grid Grid.Row="1" ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBox PlaceholderText="Search by ID, name, class, arm or department..." Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/><Button Grid.Column="1" Content="Refresh" Command="{x:Bind ViewModel.LoadCommand}" Style="{StaticResource SecondaryButtonStyle}"/></Grid>
-                        <Grid Grid.Row="2"><ListView ItemsSource="{x:Bind ViewModel.Students, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedStudent, Mode=TwoWay}"><ListView.Header><Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12,9"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="80"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions><TextBlock Text="BHS ID" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/><TextBlock Grid.Column="1" Text="NAME" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/><TextBlock Grid.Column="2" Text="CLASS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/><TextBlock Grid.Column="3" Text="ARM" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/><TextBlock Grid.Column="4" Text="GENDER" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/><TextBlock Grid.Column="5" Text="AGE" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/></Grid></Border></ListView.Header><ListView.ItemTemplate><DataTemplate><Grid Padding="12,11"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="80"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Id}" FontFamily="Consolas" Foreground="{StaticResource AccentBrush}"/><TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold"/><TextBlock Grid.Column="2" Text="{Binding ClassLevel}" Foreground="{StaticResource TextSecondaryBrush}"/><TextBlock Grid.Column="3" Text="{Binding Arm}" Foreground="{StaticResource TextSecondaryBrush}"/><TextBlock Grid.Column="4" Text="{Binding Gender}" Foreground="{StaticResource TextSecondaryBrush}"/><TextBlock Grid.Column="5" Text="{Binding Age}" Foreground="{StaticResource TextMutedBrush}"/></Grid></DataTemplate></ListView.ItemTemplate></ListView></Grid>
-                        <Grid Grid.Row="3" ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="Tip: double-check the selected student before archiving." Foreground="{StaticResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center"/><Button Grid.Column="1" Content="Edit selected" Command="{x:Bind ViewModel.EditCommand}" CommandParameter="{x:Bind ViewModel.SelectedStudent}" Style="{StaticResource SecondaryButtonStyle}"/><Button Grid.Column="2" Content="Archive selected" Click="ArchiveSelected_Click" Style="{StaticResource DangerButtonStyle}"/></Grid>
+                    <Grid RowSpacing="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Grid>
+                            <StackPanel Spacing="3"><TextBlock Text="Student directory" Style="{StaticResource SectionTitleStyle}"/><TextBlock Text="Select a record to edit or archive it." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/></StackPanel>
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" TextWrapping="Wrap"/>
+                        </Grid>
+                        <Grid Grid.Row="1" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBox PlaceholderText="Search by ID, name, class, arm or department..." Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <TextBox.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="F"/></TextBox.KeyboardAccelerators>
+                            </TextBox>
+                            <Button Grid.Column="1" Command="{x:Bind ViewModel.LoadCommand}" Style="{StaticResource SecondaryButtonStyle}" ToolTipService.ToolTip="Refresh">
+                                <SymbolIcon Symbol="Refresh"/>
+                            </Button>
+                        </Grid>
+                        <ListView Grid.Row="2" ItemsSource="{x:Bind ViewModel.Students, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedStudent, Mode=TwoWay}" SelectionMode="Single" IsItemClickEnabled="True">
+                            <ListView.Header>
+                                <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource SurfaceBorderBrush}" BorderThickness="0,0,0,1" Padding="12,9">
+                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="70"/><ColumnDefinition Width="80"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="BHS ID" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="NAME" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="2" Text="CLASS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="ARM" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="4" Text="GENDER" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="5" Text="AGE" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    </Grid>
+                                </Border>
+                            </ListView.Header>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="12,10"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="70"/><ColumnDefinition Width="80"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Id}" FontFamily="Consolas" Foreground="{StaticResource AccentBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding ClassLevel}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Arm}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding Gender}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="5" Text="{Binding Age}" Foreground="{StaticResource TextMutedBrush}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <Grid Grid.Row="3" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="Select a student to enable actions." Foreground="{StaticResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Edit selected" Command="{x:Bind ViewModel.EditCommand}" CommandParameter="{x:Bind ViewModel.SelectedStudent}" Style="{StaticResource SecondaryButtonStyle}"/>
+                            <Button Grid.Column="2" Content="Archive" Click="ArchiveSelected_Click" Style="{StaticResource DangerButtonStyle}"/>
+                        </Grid>
                     </Grid>
                 </Border>
             </Grid>
