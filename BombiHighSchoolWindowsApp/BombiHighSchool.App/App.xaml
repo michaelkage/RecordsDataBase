@@ -6,21 +6,43 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Bombi High School visual system: deep navy surfaces + restrained blue accent. -->
-            <SolidColorBrush x:Key="PageBackgroundBrush" Color="#08111F" />
-            <SolidColorBrush x:Key="SurfaceBrush" Color="#0F1B2D" />
-            <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="#14233A" />
-            <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#1A2D48" />
-            <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#243853" />
-            <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC" />
-            <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A8B6C8" />
-            <SolidColorBrush x:Key="TextMutedBrush" Color="#718198" />
-            <SolidColorBrush x:Key="AccentBrush" Color="#4F8CFF" />
-            <SolidColorBrush x:Key="AccentHoverBrush" Color="#6AA0FF" />
-            <SolidColorBrush x:Key="AccentSubtleBrush" Color="#19345F" />
-            <SolidColorBrush x:Key="SuccessBrush" Color="#38D39F" />
-            <SolidColorBrush x:Key="WarningBrush" Color="#F4C95D" />
-            <SolidColorBrush x:Key="DangerBrush" Color="#FF7070" />
+            <!-- Bombi High School design system. Neutral surfaces + school blue accent, with automatic light/dark support. -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#F5F7FB" />
+                    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#F0F5FF" />
+                    <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#DCE3EE" />
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#172033" />
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#536176" />
+                    <SolidColorBrush x:Key="TextMutedBrush" Color="#7B879A" />
+                    <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
+                    <SolidColorBrush x:Key="AccentHoverBrush" Color="#1D4ED8" />
+                    <SolidColorBrush x:Key="AccentSubtleBrush" Color="#E8F0FF" />
+                    <SolidColorBrush x:Key="SuccessBrush" Color="#16835B" />
+                    <SolidColorBrush x:Key="WarningBrush" Color="#A86600" />
+                    <SolidColorBrush x:Key="DangerBrush" Color="#C73535" />
+                    <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#0F141D" />
+                    <SolidColorBrush x:Key="SurfaceBrush" Color="#171E29" />
+                    <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="#1C2532" />
+                    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#253247" />
+                    <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#2B384B" />
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F4F7FB" />
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B1BDCE" />
+                    <SolidColorBrush x:Key="TextMutedBrush" Color="#7F8DA2" />
+                    <SolidColorBrush x:Key="AccentBrush" Color="#5B93F7" />
+                    <SolidColorBrush x:Key="AccentHoverBrush" Color="#7AA9FF" />
+                    <SolidColorBrush x:Key="AccentSubtleBrush" Color="#1D3154" />
+                    <SolidColorBrush x:Key="SuccessBrush" Color="#45C995" />
+                    <SolidColorBrush x:Key="WarningBrush" Color="#F2C45E" />
+                    <SolidColorBrush x:Key="DangerBrush" Color="#FF7777" />
+                    <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
 
             <Style x:Key="PageTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="30" />
@@ -53,7 +75,8 @@
             </Style>
             <Style x:Key="PrimaryButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-                <Setter Property="Foreground" Value="White" />
+                <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
+                <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="CornerRadius" Value="8" />
                 <Setter Property="Padding" Value="16,9" />
                 <Setter Property="FontWeight" Value="SemiBold" />
@@ -68,6 +91,9 @@
             </Style>
             <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                 <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+            </Style>
+            <Style x:Key="ToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Padding" Value="13,7" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>
