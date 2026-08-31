@@ -25,6 +25,7 @@ public partial class App : Application
         services.AddSingleton<GlobalSearchService>();
         services.AddSingleton<NotificationService>(_ => NotificationService.Instance);
         services.AddSingleton<BackupService>();
+        services.AddSingleton<AuditLogService>();
 
         services.AddTransient<AdminAcademicViewModel>();
         services.AddTransient<MainWindow>();
