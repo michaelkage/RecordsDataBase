@@ -26,10 +26,14 @@ public partial class App : Application
         services.AddSingleton<NotificationService>(_ => NotificationService.Instance);
         services.AddSingleton<AuditLogService>();
 
+        // ViewModels used by pages that are instantiated through WinUI navigation.
+        services.AddTransient<AdminLoginViewModel>();
         services.AddTransient<AdminAcademicViewModel>();
+
         services.AddTransient<MainWindow>();
         services.AddTransient<MainPage>();
         services.AddTransient<LoginPage>();
+        services.AddTransient<AdminLoginPage>();
         services.AddTransient<DashboardPage>();
         services.AddTransient<StudentsPage>();
         services.AddTransient<SubjectsPage>();
