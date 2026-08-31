@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using BombiHighSchool.App.Services;
@@ -12,7 +13,7 @@ public sealed partial class AdminLoginPage : Page
     public AdminLoginPage()
     {
         InitializeComponent();
-        ViewModel = new AdminLoginViewModel(((App)Application.Current).Services.GetRequiredService<AuthenticationService>());
+        ViewModel = ((App)Application.Current).Services.GetRequiredService<AdminLoginViewModel>();
         ViewModel.LoginSucceeded += LoginSucceeded;
         DataContext = ViewModel;
     }
