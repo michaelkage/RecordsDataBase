@@ -1,0 +1,7 @@
+1,Math
+2,English
+3,PHE
+4,VisualArts
+5,Science
+6,Technical Drawing
+7,Artificial Intelligence
