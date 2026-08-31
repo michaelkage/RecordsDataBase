@@ -16,47 +16,65 @@ public sealed partial class MainPage : Page
         _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
         InitializeComponent();
         Loaded += MainPage_Loaded;
+        KeyDown += MainPage_KeyDown;
     }
 
     private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
-        if (AppNavigation.MenuItems.Count > 0)
+        if (AppNavigation.MenuItems.Count > 0 && AppNavigation.SelectedItem is null)
             AppNavigation.SelectedItem = AppNavigation.MenuItems[0];
-
-        NavigateToPage<DashboardPage>();
     }
 
-    private void Navigation_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    private void AppNavigation_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         if (args.SelectedItem is NavigationViewItem item && item.Tag is string section)
+        {
             NavigateToSection(section);
-        else if (args.SelectedItemContainer is NavigationViewItem container && container.Tag is string footerSection)
+            return;
+        }
+
+        if (args.SelectedItemContainer is NavigationViewItem container && container.Tag is string footerSection)
             NavigateToSection(footerSection);
+    }
+
+    private void AppNavigation_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        if (args.InvokedItemContainer is NavigationViewItem item && item.Tag is string section)
+            NavigateToSection(section);
+    }
+
+    private void AppNavigation_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
+    {
+        // NavigationView manages compact/expanded behavior natively.
     }
 
     private void NavigateToSection(string section)
     {
-        switch (section)
+        var pageType = section switch
         {
-            case "Dashboard": NavigateToPage<DashboardPage>(); break;
-            case "Students": NavigateToPage<StudentsPage>(); break;
-            case "Subjects": NavigateToPage<SubjectsPage>(); break;
-            case "Academic": NavigateToPage<AdminAcademicPage>(); break;
-            case "Scores": NavigateToPage<ScoresPage>(); break;
-            case "Rankings": NavigateToPage<RankingsPage>(); break;
-            case "Settings": NavigateToPage<SettingsPage>(); break;
-            case "Logout":
-                SessionService.Clear();
-                Frame?.Navigate(typeof(LoginPage));
-                break;
-            default: NavigateToPage<DashboardPage>(); break;
-        }
+            "dashboard" => typeof(DashboardPage),
+            "students" => typeof(StudentsPage),
+            "subjects" => typeof(SubjectsPage),
+            "academic" => typeof(AdminAcademicPage),
+            "scores" => typeof(ScoresPage),
+            "rankings" => typeof(RankingsPage),
+            "settings" => typeof(SettingsPage),
+            _ => typeof(DashboardPage)
+        };
+
+        NavigateToPage(pageType);
     }
 
-    private void NavigateToPage<T>() where T : Page
+    private void NavigateToPage(Type pageType)
     {
-        var pageInstance = ((App)Application.Current).Services.GetRequiredService<T>();
-        ContentFrame.Content = pageInstance;
+        if (ContentFrame.Content?.GetType() == pageType)
+            return;
+
+        var page = ((App)Application.Current).Services.GetService(pageType) as Page;
+        if (page is null)
+            throw new InvalidOperationException($"No page service is registered for {pageType.Name}.");
+
+        ContentFrame.Content = page;
     }
 
     private void MainPage_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -65,8 +83,7 @@ public sealed partial class MainPage : Page
             .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
-        if (!ctrlDown)
-            return;
+        if (!ctrlDown) return;
 
         switch (e.Key)
         {
@@ -78,16 +95,11 @@ public sealed partial class MainPage : Page
                 NewStudent_Click(this, new RoutedEventArgs());
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.Number1:
-                SelectMenuItem(0); e.Handled = true; break;
-            case Windows.System.VirtualKey.Number2:
-                SelectMenuItem(1); e.Handled = true; break;
-            case Windows.System.VirtualKey.Number3:
-                SelectMenuItem(2); e.Handled = true; break;
-            case Windows.System.VirtualKey.Number4:
-                SelectMenuItem(3); e.Handled = true; break;
-            case Windows.System.VirtualKey.Number5:
-                SelectMenuItem(4); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number1: SelectMenuItem(0); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number2: SelectMenuItem(1); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number3: SelectMenuItem(2); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number4: SelectMenuItem(3); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number5: SelectMenuItem(4); e.Handled = true; break;
         }
     }
 
@@ -97,7 +109,7 @@ public sealed partial class MainPage : Page
             AppNavigation.SelectedItem = AppNavigation.MenuItems[index];
     }
 
-    private void GlobalSearch_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    private void GlobalSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         var query = sender.Text?.Trim();
         if (string.IsNullOrWhiteSpace(query)) return;
