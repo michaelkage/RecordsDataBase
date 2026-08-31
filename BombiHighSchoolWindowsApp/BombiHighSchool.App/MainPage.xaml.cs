@@ -61,13 +61,40 @@ public sealed partial class MainPage : Page
 
     private void MainPage_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == Windows.System.VirtualKey.K &&
-            Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
-                .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))
+        var ctrlDown = Microsoft.UI.Input.InputKeyboardSource
+            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+
+        if (!ctrlDown)
+            return;
+
+        switch (e.Key)
         {
-            GlobalSearchBox.Focus(FocusState.Keyboard);
-            e.Handled = true;
+            case Windows.System.VirtualKey.K:
+                GlobalSearchBox.Focus(FocusState.Keyboard);
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.N:
+                NewStudent_Click(this, new RoutedEventArgs());
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.Number1:
+                SelectMenuItem(0); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number2:
+                SelectMenuItem(1); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number3:
+                SelectMenuItem(2); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number4:
+                SelectMenuItem(3); e.Handled = true; break;
+            case Windows.System.VirtualKey.Number5:
+                SelectMenuItem(4); e.Handled = true; break;
         }
+    }
+
+    private void SelectMenuItem(int index)
+    {
+        if (index >= 0 && index < AppNavigation.MenuItems.Count)
+            AppNavigation.SelectedItem = AppNavigation.MenuItems[index];
     }
 
     private void GlobalSearch_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
@@ -75,14 +102,14 @@ public sealed partial class MainPage : Page
         var query = sender.Text?.Trim();
         if (string.IsNullOrWhiteSpace(query)) return;
 
-        NavigateToPage<StudentsPage>();
+        SelectMenuItem(1);
         if (ContentFrame.Content is StudentsPage page)
             page.FocusSearch(query);
     }
 
     private void NewStudent_Click(object sender, RoutedEventArgs e)
     {
-        NavigateToPage<StudentsPage>();
+        SelectMenuItem(1);
         if (ContentFrame.Content is StudentsPage page)
             page.StartNewStudent();
     }
