@@ -1,9 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using BombiHighSchool.App.Services;
 using BombiHighSchool.App.Views;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BombiHighSchool.App;
 
@@ -11,10 +11,13 @@ public sealed partial class MainPage : Page
 {
     private readonly LocalDataService _dataService;
 
-    public MainPage(LocalDataService dataService)
+    // WinUI creates navigated pages through their parameterless constructor.
+    // Resolve application services from the DI container here instead of requiring
+    // a constructor parameter, which prevents navigation-time crashes.
+    public MainPage()
     {
-        _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
         InitializeComponent();
+        _dataService = ((App)Application.Current).Services.GetRequiredService<LocalDataService>();
         Loaded += MainPage_Loaded;
         KeyDown += MainPage_KeyDown;
     }
