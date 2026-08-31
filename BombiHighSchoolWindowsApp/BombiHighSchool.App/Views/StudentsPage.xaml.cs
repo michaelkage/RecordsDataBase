@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using BombiHighSchool.App.Services;
 using BombiHighSchool.App.ViewModels;
 
 namespace BombiHighSchool.App.Views;
@@ -17,16 +18,12 @@ public sealed partial class StudentsPage : Page
     {
         if (ViewModel.SelectedStudent is null) return;
         var student = ViewModel.SelectedStudent;
-        var dialog = new ContentDialog
+        if (await AppUxServices.ConfirmAsync(XamlRoot,
+            "Archive student?",
+            $"{student.Name} will remain in the records but be marked archived and their account disabled. Nothing is permanently deleted.",
+            "Archive student") )
         {
-            Title = "Archive student?",
-            Content = $"{student.Name} will be preserved in the records but marked archived and their account will be disabled. Nothing is permanently deleted.",
-            PrimaryButtonText = "Archive student",
-            CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Close,
-            XamlRoot = XamlRoot
-        };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
             await ViewModel.ArchiveCommand.ExecuteAsync(student);
+        }
     }
 }
