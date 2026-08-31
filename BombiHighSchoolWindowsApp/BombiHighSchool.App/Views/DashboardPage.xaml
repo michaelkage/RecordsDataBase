@@ -1,32 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page x:Class="BombiHighSchool.App.Views.DashboardPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{StaticResource PageBackgroundBrush}">
-<ScrollViewer Padding="32,28,32,40"><StackPanel MaxWidth="1250" Spacing="22" HorizontalAlignment="Left">
-<Grid>
-    <StackPanel Spacing="5"><TextBlock Text="Good evening" Style="{StaticResource PageTitleStyle}"/><TextBlock Text="Bombi High School administration • local Windows records" Style="{StaticResource PageSubtitleStyle}"/></StackPanel>
-    <StackPanel HorizontalAlignment="Right" Spacing="3"><TextBlock x:Name="DateText" HorizontalAlignment="Right" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"/><TextBlock Text="● Local database" HorizontalAlignment="Right" Foreground="{StaticResource SuccessBrush}" FontSize="12"/></StackPanel>
-</Grid>
-<Grid ColumnSpacing="14">
-    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
-    <Border Style="{StaticResource CardStyle}"><StackPanel Spacing="6"><TextBlock Text="Students" Foreground="{StaticResource TextSecondaryBrush}"/><TextBlock x:Name="StudentsCount" Text="—" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="Active records" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/></StackPanel></Border>
-    <Border Grid.Column="1" Style="{StaticResource CardStyle}"><StackPanel Spacing="6"><TextBlock Text="Subjects" Foreground="{StaticResource TextSecondaryBrush}"/><TextBlock x:Name="SubjectsCount" Text="—" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="Available subjects" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/></StackPanel></Border>
-    <Border Grid.Column="2" Style="{StaticResource CardStyle}"><StackPanel Spacing="6"><TextBlock Text="Results" Foreground="{StaticResource TextSecondaryBrush}"/><TextBlock x:Name="ScoresCount" Text="—" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="Stored score records" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/></StackPanel></Border>
-    <Border Grid.Column="3" Style="{StaticResource CardStyle}"><StackPanel Spacing="6"><TextBlock Text="Database" Foreground="{StaticResource TextSecondaryBrush}"/><TextBlock x:Name="DatabaseState" Text="Healthy" FontSize="22" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/><TextBlock x:Name="BackupState" Text="Checking backup..." FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/></StackPanel></Border>
-</Grid>
-<Grid ColumnSpacing="16">
-    <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition/></Grid.ColumnDefinitions>
-    <Border Style="{StaticResource CardStyle}"><StackPanel Spacing="14"><Grid><TextBlock Text="Quick actions" Style="{StaticResource SectionTitleStyle}"/><TextBlock Text="Ctrl+K to search" HorizontalAlignment="Right" Foreground="{StaticResource TextMutedBrush}" FontSize="12"/></Grid>
-        <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
-            <Button Content="Add student" Click="AddStudent_Click" Style="{StaticResource PrimaryButtonStyle}"/>
-            <Button Grid.Column="1" Content="Enter scores" Click="Scores_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-            <Button Grid.Column="2" Content="Manage subjects" Click="Subjects_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-        </Grid>
-        <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
-            <Button Content="Rankings" Click="Rankings_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-            <Button Grid.Column="1" Content="Create backup" Click="Backup_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-            <Button Grid.Column="2" Content="Settings" Click="Settings_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-        </Grid>
-    </StackPanel></Border>
-    <Border Grid.Column="1" Style="{StaticResource CardStyle}"><StackPanel Spacing="12"><TextBlock Text="Needs attention" Style="{StaticResource SectionTitleStyle}"/><TextBlock x:Name="AttentionText" Text="Checking records..." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/><Button Content="Open student directory" Click="Students_Click" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left"/></StackPanel></Border>
-</Grid>
-<Border Style="{StaticResource CardStyle}"><StackPanel Spacing="8"><TextBlock Text="System status" Style="{StaticResource SectionTitleStyle}"/><TextBlock Text="✓ Local database is isolated from the website database." Foreground="{StaticResource SuccessBrush}"/><TextBlock Text="✓ Native WinUI / C# / MVVM — no WebView wrapper." Foreground="{StaticResource SuccessBrush}"/><TextBlock Text="✓ Backups and recovery are available from Settings." Foreground="{StaticResource SuccessBrush}"/><TextBlock x:Name="WarningText" Foreground="{StaticResource WarningBrush}" TextWrapping="Wrap"/></StackPanel></Border>
-</StackPanel></ScrollViewer></Page>
+    <ScrollViewer Padding="32,28,32,40">
+        <StackPanel MaxWidth="1250" Spacing="22" HorizontalAlignment="Left">
+            <Grid>
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Good evening" Style="{StaticResource PageTitleStyle}"/>
+                    <TextBlock Text="Bombi High School administration • local Windows records" Style="{StaticResource PageSubtitleStyle}"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Right" Spacing="4">
+                    <TextBlock x:Name="DateText" HorizontalAlignment="Right" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="7">
+                        <Ellipse Width="7" Height="7" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="Database online" Foreground="{StaticResource SuccessBrush}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <Grid ColumnSpacing="14">
+                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Border Style="{StaticResource CardStyle}"><StackPanel Spacing="7"><TextBlock Text="Students" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/><TextBlock x:Name="StudentsCount" Text="—" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="Active records" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/></StackPanel></Border>
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}"><StackPanel Spacing="7"><TextBlock Text="Subjects" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/><TextBlock x:Name="SubjectsCount" Text="—" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="Available subjects" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/></StackPanel></Border>
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}"><StackPanel Spacing="7"><TextBlock Text="Results" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/><TextBlock x:Name="ScoresCount" Text="—" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="Stored score records" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/></StackPanel></Border>
+                <Border Grid.Column="3" Style="{StaticResource CardStyle}"><StackPanel Spacing="7"><TextBlock Text="Database" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/><TextBlock x:Name="DatabaseState" Text="Healthy" FontSize="22" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/><TextBlock x:Name="BackupState" Text="Checking backup..." FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/></StackPanel></Border>
+            </Grid>
+
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="14">
+                        <Grid>
+                            <TextBlock Text="Quick actions" Style="{StaticResource SectionTitleStyle}"/>
+                            <TextBlock Text="Common tasks" HorizontalAlignment="Right" Foreground="{StaticResource TextMutedBrush}" FontSize="12"/>
+                        </Grid>
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <Button Content="Add student" Click="AddStudent_Click" Style="{StaticResource PrimaryButtonStyle}"/>
+                            <Button Grid.Column="1" Content="Enter scores" Click="Scores_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+                            <Button Grid.Column="2" Content="Manage subjects" Click="Subjects_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+                        </Grid>
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <Button Content="View rankings" Click="Rankings_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+                            <Button Grid.Column="1" Content="Create backup" Click="Backup_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+                            <Button Grid.Column="2" Content="Open settings" Click="Settings_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Needs attention" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock x:Name="AttentionText" Text="Checking records..." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <Button Content="Open student directory" Click="Students_Click" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="System status" Style="{StaticResource SectionTitleStyle}"/>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <StackPanel Spacing="7">
+                            <TextBlock Text="✓  Local database is isolated from the website database." Foreground="{StaticResource SuccessBrush}"/>
+                            <TextBlock Text="✓  Native WinUI / C# / MVVM — no WebView wrapper." Foreground="{StaticResource SuccessBrush}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="7">
+                            <TextBlock Text="✓  Backups and recovery are available from Settings." Foreground="{StaticResource SuccessBrush}"/>
+                            <TextBlock x:Name="WarningText" Foreground="{StaticResource WarningBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
