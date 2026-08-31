@@ -5,19 +5,70 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
-            <SolidColorBrush x:Key="PageBackgroundBrush" Color="#0B1120" />
-            <SolidColorBrush x:Key="SurfaceBrush" Color="#111827" />
-            <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="#172033" />
-            <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#26334A" />
+
+            <!-- Bombi High School visual system: deep navy surfaces + restrained blue accent. -->
+            <SolidColorBrush x:Key="PageBackgroundBrush" Color="#08111F" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#0F1B2D" />
+            <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="#14233A" />
+            <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#1A2D48" />
+            <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#243853" />
             <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC" />
-            <SolidColorBrush x:Key="TextSecondaryBrush" Color="#94A3B8" />
-            <SolidColorBrush x:Key="AccentBrush" Color="#6366F1" />
-            <SolidColorBrush x:Key="SuccessBrush" Color="#34D399" />
-            <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24" />
-            <Style x:Key="PageTitleStyle" TargetType="TextBlock"><Setter Property="FontSize" Value="30"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/></Style>
-            <Style x:Key="PageSubtitleStyle" TargetType="TextBlock"><Setter Property="FontSize" Value="14"/><Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/><Setter Property="TextWrapping" Value="Wrap"/></Style>
-            <Style x:Key="CardStyle" TargetType="Border"><Setter Property="Background" Value="{StaticResource SurfaceElevatedBrush}"/><Setter Property="BorderBrush" Value="{StaticResource SurfaceBorderBrush}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="16"/><Setter Property="Padding" Value="20"/></Style>
-            <Style x:Key="SectionTitleStyle" TargetType="TextBlock"><Setter Property="FontSize" Value="19"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/></Style>
+            <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A8B6C8" />
+            <SolidColorBrush x:Key="TextMutedBrush" Color="#718198" />
+            <SolidColorBrush x:Key="AccentBrush" Color="#4F8CFF" />
+            <SolidColorBrush x:Key="AccentHoverBrush" Color="#6AA0FF" />
+            <SolidColorBrush x:Key="AccentSubtleBrush" Color="#19345F" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#38D39F" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#F4C95D" />
+            <SolidColorBrush x:Key="DangerBrush" Color="#FF7070" />
+
+            <Style x:Key="PageTitleStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="30" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            </Style>
+            <Style x:Key="PageSubtitleStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+            <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="19" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            </Style>
+            <Style x:Key="CardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource SurfaceElevatedBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource SurfaceBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="14" />
+                <Setter Property="Padding" Value="20" />
+            </Style>
+            <Style x:Key="InsetStyle" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource SurfaceBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Padding" Value="14" />
+            </Style>
+            <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="16,9" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+            <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource SurfaceBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="16,9" />
+            </Style>
+            <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
