@@ -1,18 +1,21 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using BombiHighSchool.App.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using BombiHighSchool.App.Services;
+using BombiHighSchool.App.ViewModels;
 
 namespace BombiHighSchool.App.Views;
 
 public sealed partial class StudentLoginPage : Page
 {
-    public StudentLoginViewModel ViewModel { get; } = new();
+    public StudentLoginViewModel ViewModel { get; }
 
     public StudentLoginPage()
     {
         InitializeComponent();
+        ViewModel = new StudentLoginViewModel(((App)Application.Current).Services.GetRequiredService<AuthenticationService>());
         ViewModel.LoginSucceeded += LoginSucceeded;
+        DataContext = ViewModel;
     }
 
     private void Password_Changed(object sender, RoutedEventArgs e)
