@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using BombiHighSchool.App.Services;
 using BombiHighSchool.App.ViewModels;
 
 namespace BombiHighSchool.App.Views;
@@ -27,5 +26,9 @@ public sealed partial class AdminLoginPage : Page
     private void Back_Click(object sender, RoutedEventArgs e) => Frame?.GoBack();
 
     private void LoginSucceeded(object? sender, EventArgs e)
-        => Frame?.Navigate(typeof(MainPage));
+    {
+        // MainPage resolves its own services from DI, so navigation can safely use
+        // WinUI's normal parameterless page activation here.
+        Frame?.Navigate(typeof(MainPage));
+    }
 }
