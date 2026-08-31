@@ -6,7 +6,6 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Bombi High School Fluent design system. Keep custom surfaces restrained so WinUI controls retain their native states. -->
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="PageBackgroundBrush" Color="#F3F3F3" />
@@ -80,6 +79,7 @@
                 <Setter Property="CornerRadius" Value="4" />
                 <Setter Property="Padding" Value="16,8" />
                 <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="MinHeight" Value="36" />
             </Style>
             <Style x:Key="SecondaryButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
@@ -88,12 +88,17 @@
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="CornerRadius" Value="4" />
                 <Setter Property="Padding" Value="16,8" />
+                <Setter Property="MinHeight" Value="36" />
             </Style>
             <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                 <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
             </Style>
             <Style x:Key="ToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                 <Setter Property="Padding" Value="12,6" />
+                <Setter Property="MinHeight" Value="32" />
+            </Style>
+            <Style x:Key="PageScrollStyle" TargetType="ScrollViewer">
+                <Setter Property="Padding" Value="32,28,32,40" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>
