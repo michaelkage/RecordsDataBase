@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Bombi High School",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64/BombiHighSchool.App.exe",
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false
+    }
+  ]
+}
