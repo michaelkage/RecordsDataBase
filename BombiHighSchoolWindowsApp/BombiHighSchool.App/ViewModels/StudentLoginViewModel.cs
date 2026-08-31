@@ -6,7 +6,7 @@ namespace BombiHighSchool.App.ViewModels;
 
 public partial class StudentLoginViewModel : ObservableObject
 {
-    private readonly AuthenticationService _authenticationService = new();
+    private readonly AuthenticationService _authenticationService;
 
     [ObservableProperty] private string studentId = "";
     [ObservableProperty] private string password = "";
@@ -14,6 +14,11 @@ public partial class StudentLoginViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
 
     public event EventHandler? LoginSucceeded;
+
+    public StudentLoginViewModel(AuthenticationService authenticationService)
+    {
+        _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
+    }
 
     [RelayCommand]
     private async Task LoginAsync()
@@ -31,15 +36,19 @@ public partial class StudentLoginViewModel : ObservableObject
             var account = await _authenticationService.AuthenticateStudentAsync(StudentId, Password);
             if (account is null)
             {
-                StatusMessage = "Invalid student credentials, or no student account exists.";
+                StatusMessage = "Invalid student credentials, or the account is disabled.";
                 return;
             }
 
             LoginSucceeded?.Invoke(this, EventArgs.Empty);
         }
-        catch (Exception ex)
+        catch (DatabaseUnavailableException)
         {
-            StatusMessage = $"Sign-in failed: {ex.Message}";
+            StatusMessage = "The school database could not be opened. Please try again later.";
+        }
+        catch (Exception)
+        {
+            StatusMessage = "Sign-in failed. Please try again.";
         }
         finally
         {
